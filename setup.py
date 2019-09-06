@@ -2,7 +2,7 @@
 
 import setuptools
 
-from chord_project_service import __version__
+from chord_drop_box_service import __version__
 
 with open("README.md", "r") as rf:
     long_description = rf.read()
