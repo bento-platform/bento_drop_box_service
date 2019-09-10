@@ -17,8 +17,11 @@ os.makedirs(application.config["SERVICE_DATA"], exist_ok=True)
 @application.route("/tree", methods=["GET"])
 def drop_box_tree():
     # TODO: List directories as well
-    return jsonify([f for f in sorted(os.listdir(application.config["SERVICE_DATA"]))
-                    if not os.path.isdir(os.path.join(application.config["SERVICE_DATA"], f))])
+    return jsonify([
+        {"name": f, "path": "file://{}".format(os.path.abspath(os.path.join(application.config["SERVICE_DATA"], f)))}
+        for f in sorted(os.listdir(application.config["SERVICE_DATA"]))
+        if not os.path.isdir(os.path.join(application.config["SERVICE_DATA"], f))
+    ])
 
 
 @application.route("/service-info", methods=["GET"])
