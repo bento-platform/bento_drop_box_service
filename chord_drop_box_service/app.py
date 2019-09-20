@@ -14,14 +14,25 @@ application.config.from_mapping(
 os.makedirs(application.config["SERVICE_DATA"], exist_ok=True)
 
 
+TRAVERSAL_LIMIT = 10
+
+
+def recursively_build_directory_tree(directory, level=0):
+    if level > TRAVERSAL_LIMIT:
+        # Too deep, bail out
+        pass
+
+    return tuple({"name": entry,
+                  "path": os.path.abspath(os.path.join(directory, entry)),
+                  "contents": recursively_build_directory_tree(os.path.join(directory, entry), level=level+1)}
+                 if os.path.isdir(os.path.join(directory, entry))
+                 else {"name": entry, "path": os.path.abspath(os.path.join(directory, entry))}
+                 for entry in os.listdir(directory))
+
+
 @application.route("/tree", methods=["GET"])
 def drop_box_tree():
-    # TODO: List directories as well
-    return jsonify([
-        {"name": f, "path": os.path.abspath(os.path.join(application.config["SERVICE_DATA"], f))}
-        for f in sorted(os.listdir(application.config["SERVICE_DATA"]))
-        if not os.path.isdir(os.path.join(application.config["SERVICE_DATA"], f))
-    ])
+    return jsonify(recursively_build_directory_tree(application.config["SERVICE_DATA"]))
 
 
 @application.route("/service-info", methods=["GET"])
