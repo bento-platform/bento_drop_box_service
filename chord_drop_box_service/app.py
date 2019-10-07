@@ -14,7 +14,7 @@ application.config.from_mapping(
 os.makedirs(application.config["SERVICE_DATA"], exist_ok=True)
 
 
-TRAVERSAL_LIMIT = 10
+TRAVERSAL_LIMIT = 16
 
 
 def recursively_build_directory_tree(directory, level=0):
