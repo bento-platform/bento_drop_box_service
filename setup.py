@@ -2,17 +2,15 @@
 
 import setuptools
 
-from chord_drop_box_service import __version__
-
 with open("README.md", "r") as rf:
     long_description = rf.read()
 
 setuptools.setup(
     name="chord_drop_box_service",
-    version=__version__,
+    version="0.1.0",
 
     python_requires=">=3.6",
-    install_requires=["Flask"],
+    install_requires=["chord_lib @ git+https://github.com/c3g/chord_lib", "Flask"],
 
     author="David Lougheed",
     author_email="david.lougheed@mail.mcgill.ca",
