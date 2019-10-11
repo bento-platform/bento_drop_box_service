@@ -24,7 +24,7 @@ def recursively_build_directory_tree(directory, level=0):
                  if os.path.isdir(os.path.join(directory, entry))
                  else {"name": entry, "path": os.path.abspath(os.path.join(directory, entry))}
                  for entry in os.listdir(directory)
-                 if level < TRAVERSAL_LIMIT or not os.path.isdir(os.path.join(directory, entry)))
+                 if (level < TRAVERSAL_LIMIT or not os.path.isdir(os.path.join(directory, entry))) and entry[0] != ".")
 
 
 @application.route("/tree", methods=["GET"])
