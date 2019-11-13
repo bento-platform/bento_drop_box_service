@@ -4,8 +4,13 @@ import chord_drop_box_service
 
 from flask import Flask, jsonify
 
+SERVICE_TYPE = "ca.c3g.chord:drop-box:{}".format(chord_drop_box_service.__version__)
+SERVICE_ID = os.environ.get("SERVICE_ID", SERVICE_TYPE)
+
 application = Flask(__name__)
 application.config.from_mapping(
+    SERVICE_TYPE=SERVICE_TYPE,
+    SERVICE_ID=SERVICE_ID,
     SERVICE_DATA=os.environ.get("SERVICE_DATA", "data/")
 )
 
@@ -37,13 +42,13 @@ def service_info():
     # Spec: https://github.com/ga4gh-discovery/ga4gh-service-info
 
     return jsonify({
-        "id": "ca.distributedgenomics.chord_drop_box_service",  # TODO: Should be globally unique
-        "name": "CHORD Drop Box Service",                       # TODO: Should be globally unique
-        "type": "urn:chord:drop_box_service",                   # TODO
+        "id": application.config["SERVICE_ID"],
+        "name": "CHORD Drop Box Service",  # TODO: Should be globally unique?
+        "type": application.config["SERVICE_TYPE"],
         "description": "Drop box service for a CHORD application.",
         "organization": {
-            "name": "GenAP",
-            "url": "https://genap.ca/"
+            "name": "C3G",
+            "url": "http://www.computationalgenomics.ca"
         },
         "contactUrl": "mailto:david.lougheed@mail.mcgill.ca",
         "version": chord_drop_box_service.__version__
