@@ -2,7 +2,7 @@ import os
 
 import chord_drop_box_service
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_file
 
 SERVICE_TYPE = "ca.c3g.chord:drop-box:{}".format(chord_drop_box_service.__version__)
 SERVICE_ID = os.environ.get("SERVICE_ID", SERVICE_TYPE)
@@ -35,6 +35,34 @@ def recursively_build_directory_tree(directory, level=0):
 @application.route("/tree", methods=["GET"])
 def drop_box_tree():
     return jsonify(recursively_build_directory_tree(application.config["SERVICE_DATA"]))
+
+
+@application.route("/retrieve/<path:path>", methods=["GET"])
+def drop_box_retrieve(path):
+    directory_items = recursively_build_directory_tree(application.config["SERVICE_DATA"])
+    path_parts = path.split("/")  # TODO: Deal with slashes in file names
+
+    while len(path_parts) > 0:
+        part = path_parts[0]
+        path_parts = path_parts[1:]
+
+        if part not in {item["name"] for item in directory_items}:
+            return application.response_class(status=400)
+
+        try:
+            node = next(item for item in directory_items if item["name"] == part)
+
+            if "contents" not in node:
+                if len(path_parts) > 0:
+                    return application.response_class(status=400)
+
+                return send_file(node["path"], mimetype="application/octet-stream", as_attachment=True,
+                                 attachment_filename=node["name"])
+
+            directory_items = node["contents"]
+
+        except StopIteration:
+            return application.response_class(status=400)
 
 
 @application.route("/service-info", methods=["GET"])
