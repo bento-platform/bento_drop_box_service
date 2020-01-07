@@ -1,8 +1,13 @@
+import datetime
 import os
 
 import chord_drop_box_service
 
-from flask import Flask, jsonify, send_file
+from flask import Flask, jsonify, request, send_file
+from functools import wraps
+
+# TODO: Separate permissions check flag from debug flag?
+CHORD_DEBUG = os.environ.get("CHORD_DEBUG", "True") == "True"
 
 SERVICE_TYPE = "ca.c3g.chord:drop-box:{}".format(chord_drop_box_service.__version__)
 SERVICE_ID = os.environ.get("SERVICE_ID", SERVICE_TYPE)
@@ -32,12 +37,31 @@ def recursively_build_directory_tree(directory, level=0):
                  if (level < TRAVERSAL_LIMIT or not os.path.isdir(os.path.join(directory, entry))) and entry[0] != ".")
 
 
+def forbidden_error():
+    return jsonify({
+        "code": 403,
+        "message": "Forbidden",
+        "timestamp": datetime.datetime.utcnow().isoformat("T") + "Z",
+    }), 403
+
+
+def permissions_owner(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not CHORD_DEBUG and request.headers.get("X-User-Role", "") != "owner":
+            return forbidden_error()
+        return func(*args, **kwargs)
+    return wrapper
+
+
 @application.route("/tree", methods=["GET"])
+@permissions_owner
 def drop_box_tree():
     return jsonify(recursively_build_directory_tree(application.config["SERVICE_DATA"]))
 
 
 @application.route("/retrieve/<path:path>", methods=["GET"])
+@permissions_owner
 def drop_box_retrieve(path):
     directory_items = recursively_build_directory_tree(application.config["SERVICE_DATA"])
     path_parts = path.split("/")  # TODO: Deal with slashes in file names
