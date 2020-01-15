@@ -1,7 +1,16 @@
-git+https://github.com/c3g/chord_lib#egg=chord_lib[flask]
+attrs==19.3.0
+chord-lib==0.1.0
 Click==7.0
 Flask==1.1.1
+importlib-metadata==1.4.0
 itsdangerous==1.1.0
 Jinja2==2.10.3
+jsonschema==3.2.0
 MarkupSafe==1.1.1
+more-itertools==8.1.0
+psycopg2-binary==2.8.4
+pyrsistent==0.15.7
+redis==3.3.11
+six==1.14.0
 Werkzeug==0.16.0
+zipp==1.0.0
