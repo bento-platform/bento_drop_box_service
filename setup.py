@@ -22,7 +22,7 @@ setuptools.setup(
     packages=["chord_drop_box_service"],
     include_package_data=True,
 
-    url="TODO",
+    url="https://github.com/c3g/chord_drop_box_service",
     license="LGPLv3",
     classifiers=[
         "Programming Language :: Python :: 3",
