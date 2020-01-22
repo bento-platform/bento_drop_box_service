@@ -1,6 +1,8 @@
 import os
 
 import chord_drop_box_service
+import sys
+import traceback
 
 from chord_lib.auth.flask_decorators import flask_permissions_owner
 from chord_lib.responses.flask_errors import *
@@ -28,12 +30,21 @@ TRAVERSAL_LIMIT = 16
 
 
 # TODO: Figure out common pattern and move to chord_lib
-def _wrap(func):
+
+def _wrap_tb(func):
     # TODO: pass exception?
+    def handle_error(_e):
+        print("[CHORD Lib] Encountered error:", file=sys.stderr)
+        traceback.print_exc()
+        return func()
+    return handle_error
+
+
+def _wrap(func):
     return lambda _e: func()
 
 
-application.register_error_handler(Exception, _wrap(flask_internal_server_error))  # Generic catch-all
+application.register_error_handler(Exception, _wrap_tb(flask_internal_server_error))  # Generic catch-all
 application.register_error_handler(BadRequest, _wrap(flask_bad_request_error))
 application.register_error_handler(NotFound, _wrap(flask_not_found_error))
 
@@ -60,14 +71,15 @@ def drop_box_retrieve(path):
     directory_items = recursively_build_directory_tree(application.config["SERVICE_DATA"])
 
     if request.method == "PUT":
-        if "file" not in request.files or request.files["file"].filename == "":
-            return flask_bad_request_error("No file provided")
+        content_length = int(request.headers.get("Content-Length", "0"))
+        if content_length == 0:
+            return flask_bad_request_error("No file provided or no/zero content length specified")
 
         # TODO: This might not be secure (ok for now due to permissions check)
         upload_path = os.path.realpath(os.path.join(application.config["SERVICE_DATA"],
                                                     os.path.dirname(path), secure_filename(os.path.basename(path))))
         if not os.path.realpath(os.path.join(application.config["SERVICE_DATA"], path)).startswith(
-                application.config["SERVICE_DATA"]):
+                os.path.realpath(application.config["SERVICE_DATA"])):
             # TODO: Mark against user
             return flask_bad_request_error("Cannot upload outside of the drop box")
 
@@ -75,11 +87,17 @@ def drop_box_retrieve(path):
             return flask_bad_request_error("Cannot upload to an existing path")
 
         try:
-            os.makedirs(os.path.dirname(upload_path), mode=0x700, exist_ok=True)
+            os.makedirs(os.path.dirname(upload_path), exist_ok=True)
         except FileNotFoundError:  # blank dirname
             pass
 
-        request.files["file"].save(upload_path)
+        bytes_left = content_length
+        with open(upload_path, "wb") as f:
+            while bytes_left > 0:
+                chunk = request.stream.read(4096)  # Chunk size: 4096
+                f.write(chunk)
+                bytes_left -= len(chunk)
+
         return application.response_class(status=204)
 
     # Otherwise, find the file if it exists and return it.
