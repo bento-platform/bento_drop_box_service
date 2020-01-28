@@ -54,7 +54,9 @@ def recursively_build_directory_tree(directory, level=0):
                   "path": os.path.abspath(os.path.join(directory, entry)),
                   "contents": recursively_build_directory_tree(os.path.join(directory, entry), level=level+1)}
                  if os.path.isdir(os.path.join(directory, entry))
-                 else {"name": entry, "path": os.path.abspath(os.path.join(directory, entry))}
+                 else {"name": entry,
+                       "path": os.path.abspath(os.path.join(directory, entry)),
+                       "size": os.path.getsize(os.path.join(directory, entry))}
                  for entry in os.listdir(directory)
                  if (level < TRAVERSAL_LIMIT or not os.path.isdir(os.path.join(directory, entry))) and entry[0] != ".")
 
