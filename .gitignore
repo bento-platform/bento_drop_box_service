@@ -1,5 +1,9 @@
 env
-.idea/workspace.xml
-.idea/dataSources*
 data/
 __pycache__
+
+# IDE stuff
+.idea/workspace.xml
+.idea/dataSources*
+*.swp
+*.swo
