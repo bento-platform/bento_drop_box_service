@@ -1,8 +1,6 @@
 import os
 
 import chord_drop_box_service
-import sys
-import traceback
 
 from chord_lib.auth.flask_decorators import flask_permissions_owner
 from chord_lib.responses.flask_errors import *
@@ -12,41 +10,24 @@ from werkzeug.utils import secure_filename
 
 
 SERVICE_TYPE = "ca.c3g.chord:drop-box:{}".format(chord_drop_box_service.__version__)
-SERVICE_ID = os.environ.get("SERVICE_ID", SERVICE_TYPE)
+SERVICE_NAME = "CHORD Drop Box Service"
 
 application = Flask(__name__)
 application.config.from_mapping(
-    SERVICE_TYPE=SERVICE_TYPE,
-    SERVICE_ID=SERVICE_ID,
-    SERVICE_DATA=os.environ.get("SERVICE_DATA", "data/")
+    SERVICE_ID=os.environ.get("SERVICE_ID", SERVICE_TYPE),
+    SERVICE_DATA=os.environ.get("SERVICE_DATA", "data/"),
+    TRAVERSAL_LIMIT=16,
 )
+
+# Generic catch-all
+application.register_error_handler(Exception, flask_error_wrap_with_traceback(flask_internal_server_error,
+                                                                              service_name=SERVICE_NAME))
+application.register_error_handler(BadRequest, flask_error_wrap(flask_bad_request_error))
+application.register_error_handler(NotFound, flask_error_wrap(flask_not_found_error))
 
 
 # Make data directory/ies if needed
 os.makedirs(application.config["SERVICE_DATA"], exist_ok=True)
-
-
-TRAVERSAL_LIMIT = 16
-
-
-# TODO: Figure out common pattern and move to chord_lib
-
-def _wrap_tb(func):
-    # TODO: pass exception?
-    def handle_error(_e):
-        print("[CHORD Lib] Encountered error:", file=sys.stderr)
-        traceback.print_exc()
-        return func()
-    return handle_error
-
-
-def _wrap(func):
-    return lambda _e: func()
-
-
-application.register_error_handler(Exception, _wrap_tb(flask_internal_server_error))  # Generic catch-all
-application.register_error_handler(BadRequest, _wrap(flask_bad_request_error))
-application.register_error_handler(NotFound, _wrap(flask_not_found_error))
 
 
 def recursively_build_directory_tree(directory, level=0):
@@ -58,7 +39,8 @@ def recursively_build_directory_tree(directory, level=0):
                        "path": os.path.abspath(os.path.join(directory, entry)),
                        "size": os.path.getsize(os.path.join(directory, entry))}
                  for entry in os.listdir(directory)
-                 if (level < TRAVERSAL_LIMIT or not os.path.isdir(os.path.join(directory, entry))) and entry[0] != ".")
+                 if (level < application.config["TRAVERSAL_LIMIT"] or not os.path.isdir(os.path.join(directory, entry)))
+                 and entry[0] != ".")
 
 
 @application.route("/tree", methods=["GET"])
@@ -134,8 +116,8 @@ def service_info():
 
     return jsonify({
         "id": application.config["SERVICE_ID"],
-        "name": "CHORD Drop Box Service",  # TODO: Should be globally unique?
-        "type": application.config["SERVICE_TYPE"],
+        "name": SERVICE_NAME,
+        "type": SERVICE_TYPE,
         "description": "Drop box service for a CHORD application.",
         "organization": {
             "name": "C3G",
