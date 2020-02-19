@@ -6,11 +6,11 @@ import boto3
 from flask import Flask
 from werkzeug.exceptions import BadRequest, NotFound
 
-import chord_drop_box_service
+from chord_drop_box_service import __version__
 from chord_lib.responses.flask_errors import *
 
 
-SERVICE_TYPE = "ca.c3g.chord:drop-box:{}".format(chord_drop_box_service.__version__)
+SERVICE_TYPE = "ca.c3g.chord:drop-box:{}".format(__version__)
 SERVICE_ID = os.environ.get("SERVICE_ID", SERVICE_TYPE)
 
 SERVICE_DATA = os.environ.get("SERVICE_DATA", "data/")

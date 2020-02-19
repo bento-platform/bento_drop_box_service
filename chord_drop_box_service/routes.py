@@ -5,6 +5,7 @@ from flask import jsonify, request, send_file
 from werkzeug.utils import secure_filename
 from chord_lib.auth.flask_decorators import flask_permissions_owner
 from chord_lib.responses.flask_errors import *
+from chord_drop_box_service import __version__
 from chord_drop_box_service.app import application, bucket
 from chord_drop_box_service.minio import S3Tree
 
@@ -158,5 +159,5 @@ def service_info():
             "url": "http://www.computationalgenomics.ca"
         },
         "contactUrl": "mailto:david.lougheed@mail.mcgill.ca",
-        "version": chord_drop_box_service.__version__
+        "version": __version__
     })
