@@ -1,3 +1,6 @@
+from flask import url_for
+
+
 class S3File():
     def __init__(self, obj, name):
         self.name = name
@@ -7,7 +10,7 @@ class S3File():
     def serialize(self):
         return {
             "name": self.name,
-            "path": self.path,
+            "path": url_for('drop_box_retrieve', path=self.path, _external=True),
             "size": self.size
         }
 
