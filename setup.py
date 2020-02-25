@@ -7,11 +7,11 @@ with open("README.md", "r") as rf:
 
 setuptools.setup(
     name="chord_drop_box_service",
-    version="0.1.0",
+    version="0.2.0",
 
     python_requires=">=3.6",
     install_requires=[
-        "chord_lib[flask]==0.2.0",
+        "chord_lib[flask]==0.3.0",
         "Flask>=1.1,<2.0",
         "boto3==1.11.17"
     ],

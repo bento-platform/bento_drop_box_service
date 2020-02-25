@@ -10,9 +10,6 @@ from chord_drop_box_service.app import application, bucket
 from chord_drop_box_service.minio import S3Tree
 
 
-TRAVERSAL_LIMIT = 16
-
-
 def locally_build_directory_tree(directory, level=0):
     return tuple(
         {
@@ -27,7 +24,7 @@ def locally_build_directory_tree(directory, level=0):
             "size": os.path.getsize(os.path.join(directory, entry))
         }
         for entry in os.listdir(directory)
-        if (level < TRAVERSAL_LIMIT or not os.path.isdir(os.path.join(directory, entry))) and entry[0] != "."
+        if (level < application.config["TRAVERSAL_LIMIT"] or not os.path.isdir(os.path.join(directory, entry))) and entry[0] != "."
     )
 
 
@@ -135,7 +132,10 @@ def minio_retrieve(path):
 def drop_box_retrieve(path):
     # Werkzeug's default is to encode URL to latin1
     # in case we have unicode characters in the filename
-    path = path.encode('iso-8859-1').decode('utf8')
+    try:
+        path = path.encode('iso-8859-1').decode('utf8')
+    except UnicodeDecodeError:
+        pass
 
     if application.config['SERVICE_DATA_SOURCE'] == 'local':
         return locally_retrieve(path)
@@ -148,10 +148,9 @@ def drop_box_retrieve(path):
 @application.route("/service-info", methods=["GET"])
 def service_info():
     # Spec: https://github.com/ga4gh-discovery/ga4gh-service-info
-
     return jsonify({
         "id": application.config["SERVICE_ID"],
-        "name": "CHORD Drop Box Service",  # TODO: Should be globally unique?
+        "name": application.config["SERVICE_NAME"],
         "type": application.config["SERVICE_TYPE"],
         "description": "Drop box service for a CHORD application.",
         "organization": {
