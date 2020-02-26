@@ -10,7 +10,7 @@ class S3File:
     def serialize(self):
         return {
             "name": self.name,
-            "path": url_for('drop_box_retrieve', path=self.path, _external=True),
+            "path": url_for('drop_box_service.drop_box_retrieve', path=self.path, _external=True),
             "size": self.size
         }
 
