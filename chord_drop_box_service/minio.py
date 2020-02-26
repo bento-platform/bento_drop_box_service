@@ -1,7 +1,7 @@
 from flask import url_for
 
 
-class S3File():
+class S3File:
     def __init__(self, obj, name):
         self.name = name
         self.path = obj.key
@@ -10,12 +10,12 @@ class S3File():
     def serialize(self):
         return {
             "name": self.name,
-            "path": url_for('drop_box_retrieve', path=self.path, _external=True),
+            "path": url_for('drop_box_service.drop_box_retrieve', path=self.path, _external=True),
             "size": self.size
         }
 
 
-class S3Directory():
+class S3Directory:
     # The path argument keeps track of where we are in the nested
     # directories
     def __init__(self, obj, path=None):
@@ -43,7 +43,7 @@ class S3Directory():
         for d in self.directories:
             if d.name == name:
                 return d
-        
+
         return None
 
     def add_path(self, obj, path):
@@ -67,7 +67,7 @@ class S3Directory():
         }
 
 
-class S3Tree():
+class S3Tree:
     def __init__(self):
         self.directories = []
         self.files = []
@@ -76,7 +76,7 @@ class S3Tree():
         for d in self.directories:
             if d.name == name:
                 return d
-        
+
         return None
 
     def add_path(self, obj):
