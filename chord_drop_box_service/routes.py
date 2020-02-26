@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, jsonify
+from flask import Blueprint, current_app, jsonify, request
 from chord_lib.auth.flask_decorators import flask_permissions_owner
 from chord_lib.responses.flask_errors import *
 from chord_drop_box_service import __version__
@@ -34,6 +34,12 @@ def drop_box_retrieve(path):
 
     if backend is None:
         return flask_internal_server_error("The service source data is not configured properly")
+
+    if request.method == "PUT":
+        content_length = int(request.headers.get("Content-Length", "0"))
+        if content_length == 0:
+            return flask_bad_request_error("No file provided or no/zero content length specified")
+        return backend.upload_to_path(request, path, content_length)
 
     return backend.retrieve_from_path(path)
 
