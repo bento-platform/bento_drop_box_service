@@ -3,6 +3,7 @@ from chord_lib.auth.flask_decorators import flask_permissions_owner
 from chord_lib.responses.flask_errors import *
 from chord_drop_box_service import __version__
 from chord_drop_box_service.backend import get_backend
+from chord_drop_box_service.constants import *
 
 
 drop_box_service = Blueprint("drop_box_service", __name__)
@@ -42,8 +43,8 @@ def service_info():
     # Spec: https://github.com/ga4gh-discovery/ga4gh-service-info
     return jsonify({
         "id": current_app.config["SERVICE_ID"],
-        "name": current_app.config["SERVICE_NAME"],
-        "type": current_app.config["SERVICE_TYPE"],
+        "name": SERVICE_NAME,
+        "type": SERVICE_TYPE,
         "description": "Drop box service for a CHORD application.",
         "organization": {
             "name": "C3G",

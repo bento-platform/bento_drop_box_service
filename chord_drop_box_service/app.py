@@ -1,15 +1,12 @@
 import os
 
+from chord_lib.responses.flask_errors import *
 from flask import Flask
 from werkzeug.exceptions import BadRequest, NotFound
 
-from chord_drop_box_service import __version__
 from chord_drop_box_service.backend import close_backend
+from chord_drop_box_service.constants import *
 from chord_drop_box_service.routes import drop_box_service
-from chord_lib.responses.flask_errors import *
-
-SERVICE_TYPE = "ca.c3g.chord:drop-box:{}".format(__version__)
-SERVICE_NAME = "CHORD Drop Box Service"
 
 SERVICE_DATA = os.environ.get("SERVICE_DATA", "data/")
 MINIO_URL = os.environ.get("MINIO_URL", None)
@@ -17,8 +14,6 @@ MINIO_URL = os.environ.get("MINIO_URL", None)
 application = Flask(__name__)
 application.config.from_mapping(
     SERVICE_ID=os.environ.get("SERVICE_ID", SERVICE_TYPE),
-    SERVICE_NAME=SERVICE_NAME,
-    SERVICE_TYPE=SERVICE_TYPE,
     SERVICE_DATA_SOURCE='minio' if MINIO_URL else 'local',
     SERVICE_DATA=None if MINIO_URL else SERVICE_DATA,
     MINIO_URL=MINIO_URL,
