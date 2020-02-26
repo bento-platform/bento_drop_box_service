@@ -5,6 +5,7 @@
       <w>itsdangerous</w>
       <w>jinja</w>
       <w>lougheed</w>
+      <w>minio</w>
       <w>werkzeug</w>
     </words>
   </dictionary>

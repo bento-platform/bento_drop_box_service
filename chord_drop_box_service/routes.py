@@ -24,7 +24,8 @@ def locally_build_directory_tree(directory, level=0):
             "size": os.path.getsize(os.path.join(directory, entry))
         }
         for entry in os.listdir(directory)
-        if (level < application.config["TRAVERSAL_LIMIT"] or not os.path.isdir(os.path.join(directory, entry))) and entry[0] != "."
+        if (level < current_app.config["TRAVERSAL_LIMIT"] or
+            not os.path.isdir(os.path.join(directory, entry))) and entry[0] != "."
     )
 
 
