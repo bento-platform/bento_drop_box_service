@@ -1,7 +1,6 @@
 import os
-import boto3
 from botocore.exceptions import ClientError
-from flask import jsonify, request, send_file
+from flask import current_app, jsonify, request, send_file
 from werkzeug.utils import secure_filename
 from chord_lib.auth.flask_decorators import flask_permissions_owner
 from chord_lib.responses.flask_errors import *
@@ -80,7 +79,7 @@ def locally_retrieve(path):
                 f.write(chunk)
                 bytes_left -= len(chunk)
 
-        return application.response_class(status=204)
+        return current_app.response_class(status=204)
 
     # Otherwise, find the file if it exists and return it.
     path_parts = path.split("/")  # TODO: Deal with slashes in file names
