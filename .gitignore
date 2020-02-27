@@ -1,6 +1,11 @@
 env
 data/
 __pycache__
+*.pyc
+
+# testing related
+.coverage
+.tox
 
 # IDE stuff
 .idea/workspace.xml

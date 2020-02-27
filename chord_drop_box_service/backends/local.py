@@ -1,8 +1,8 @@
 import os
+from typing import Tuple
 
 from chord_lib.responses.flask_errors import flask_bad_request_error, flask_not_found_error
 from flask import current_app, send_file
-from typing import Tuple
 from werkzeug import Request, Response
 from werkzeug.utils import secure_filename
 
