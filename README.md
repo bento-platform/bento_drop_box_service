@@ -1,5 +1,8 @@
 # chord_drop_box_service
 
+![Build Status](https://api.travis-ci.com/c3g/chord_drop_down_service.svg?branch=master)
+[![codecov](https://codecov.io/gh/c3g/chord_drop_down_service/branch/master/graph/badge.svg)](https://codecov.io/gh/c3g/chord_drop_down_service)
+
 This is a small flask application providing files for ingestion (through chord_web,
 for chord_wes). By default the file served are read on the existing filesystem but
 these can also be read from a minIO instance (or aws S3 for that matter).
