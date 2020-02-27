@@ -1,5 +1,14 @@
 env
-.idea/workspace.xml
-.idea/dataSources*
 data/
 __pycache__
+*.pyc
+
+# testing related
+.coverage
+.tox
+
+# IDE stuff
+.idea/workspace.xml
+.idea/dataSources*
+*.swp
+*.swo
