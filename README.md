@@ -1,4 +1,4 @@
-# chord_drop_box_service
+# CHORD Drop Box Service
 
 ![Build Status](https://api.travis-ci.com/c3g/chord_drop_box_service.svg?branch=master)
 [![codecov](https://codecov.io/gh/c3g/chord_drop_box_service/branch/master/graph/badge.svg)](https://codecov.io/gh/c3g/chord_drop_box_service)
