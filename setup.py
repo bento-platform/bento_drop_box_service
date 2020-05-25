@@ -1,23 +1,28 @@
 #!/usr/bin/env python
 
+import configparser
+import os
 import setuptools
 
 with open("README.md", "r") as rf:
     long_description = rf.read()
 
+config = configparser.ConfigParser()
+config.read(os.path.join(os.path.dirname(os.path.realpath(__file__)), "chord_drop_box_service", "package.cfg"))
+
 setuptools.setup(
-    name="chord_drop_box_service",
-    version="0.3.0",
+    name=config["package"]["name"],
+    version=config["package"]["version"],
 
     python_requires=">=3.6",
     install_requires=[
-        "chord_lib[flask]==0.5.0",
-        "Flask>=1.1,<2.0",
-        "boto3>=1.12.9,<1.13"
+        "chord_lib[flask]==0.9.0",
+        "Flask>=1.1.2,<2.0",
+        "boto3>=1.13.16,<1.14",
     ],
 
-    author="David Lougheed",
-    author_email="david.lougheed@mail.mcgill.ca",
+    author=config["package"]["authors"],
+    author_email=config["package"]["author_emails"],
 
     description="Drop box and basic file management service for the CHORD project.",
     long_description=long_description,
