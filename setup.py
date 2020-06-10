@@ -18,7 +18,7 @@ setuptools.setup(
     install_requires=[
         "chord_lib[flask]==0.9.0",
         "Flask>=1.1.2,<2.0",
-        "boto3>=1.13.16,<1.14",
+        "boto3>=1.13.26,<1.14",
     ],
 
     author=config["package"]["authors"],
