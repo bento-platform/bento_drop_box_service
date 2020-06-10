@@ -1,1 +1,1 @@
-include chord_drop_box_service/package.cfg
+include bento_drop_box_service/package.cfg
