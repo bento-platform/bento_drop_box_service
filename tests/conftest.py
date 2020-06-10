@@ -4,9 +4,9 @@ from flask import g
 from moto import mock_s3
 import pytest
 
-from chord_drop_box_service.app import application
-from chord_drop_box_service.backends.minio import MinioBackend
-from chord_drop_box_service.backends.local import LocalBackend
+from bento_drop_box_service.app import application
+from bento_drop_box_service.backends.minio import MinioBackend
+from bento_drop_box_service.backends.local import LocalBackend
 
 
 @pytest.fixture(scope='session')
