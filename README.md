@@ -1,10 +1,10 @@
-# CHORD Drop Box Service
+# Bento Drop Box Service
 
-![Build Status](https://api.travis-ci.com/c3g/chord_drop_box_service.svg?branch=master)
-[![codecov](https://codecov.io/gh/c3g/chord_drop_box_service/branch/master/graph/badge.svg)](https://codecov.io/gh/c3g/chord_drop_box_service)
+![Build Status](https://api.travis-ci.com/bento-platform/bento_drop_box_service.svg?branch=master)
+[![codecov](https://codecov.io/gh/bento-platform/bento_drop_box_service/branch/master/graph/badge.svg)](https://codecov.io/gh/bento-platform/bento_drop_box_service)
 
-This is a small flask application providing files for ingestion (through `chord_web`,
-for `chord_wes`). By default the file served are read on the existing filesystem but
+This is a small flask application providing files for ingestion (through `bento_web`,
+for `bento_wes`). By default the file served are read on the existing filesystem but
 these can also be read from a minIO instance (or AWS S3 for that matter).
 
 ## Environment Variables
@@ -28,5 +28,5 @@ pip install -r requirements.txt
 To start the application:
 
 ```bash
-FLASK_APP=chord_drop_box_service.app flask run
+FLASK_APP=bento_drop_box_service.app flask run
 ```

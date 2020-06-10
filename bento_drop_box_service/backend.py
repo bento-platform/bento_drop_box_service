@@ -14,11 +14,11 @@ __all__ = [
 
 def _get_backend() -> Optional[DropBoxBackend]:
     # Make data directory/ies if needed
-    if current_app.config['SERVICE_DATA_SOURCE'] == 'local':
+    if current_app.config["SERVICE_DATA_SOURCE"] == "local":
         os.makedirs(current_app.config["SERVICE_DATA"], exist_ok=True)
         return LocalBackend()
 
-    elif current_app.config['SERVICE_DATA_SOURCE'] == 'minio':
+    elif current_app.config["SERVICE_DATA_SOURCE"] == "minio":
         return MinioBackend()
 
     return None

@@ -4,9 +4,9 @@ from chord_lib.responses.flask_errors import (
     flask_bad_request_error,
     flask_internal_server_error
 )
-from chord_drop_box_service import __version__
-from chord_drop_box_service.backend import get_backend
-from chord_drop_box_service.constants import SERVICE_NAME, SERVICE_TYPE
+from bento_drop_box_service import __version__
+from bento_drop_box_service.backend import get_backend
+from bento_drop_box_service.constants import SERVICE_NAME, SERVICE_TYPE
 
 
 drop_box_service = Blueprint("drop_box_service", __name__)
@@ -54,7 +54,7 @@ def service_info():
         "id": current_app.config["SERVICE_ID"],
         "name": SERVICE_NAME,
         "type": SERVICE_TYPE,
-        "description": "Drop box service for a CHORD application.",
+        "description": "Drop box service for a Bento platform node.",
         "organization": {
             "name": "C3G",
             "url": "http://www.computationalgenomics.ca"
