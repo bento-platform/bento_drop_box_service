@@ -1,6 +1,6 @@
 from flask import Blueprint, current_app, jsonify, request
-from chord_lib.auth.flask_decorators import flask_permissions_owner
-from chord_lib.responses.flask_errors import (
+from bento_lib.auth.flask_decorators import flask_permissions_owner
+from bento_lib.responses.flask_errors import (
     flask_bad_request_error,
     flask_internal_server_error
 )

@@ -2,7 +2,7 @@ import boto3
 from typing import Tuple
 
 from botocore.exceptions import ClientError
-from chord_lib.responses.flask_errors import flask_internal_server_error, flask_not_found_error
+from bento_lib.responses.flask_errors import flask_internal_server_error, flask_not_found_error
 from flask import current_app, send_file
 from werkzeug import Request, Response
 

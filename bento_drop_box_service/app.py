@@ -1,6 +1,6 @@
 import os
 
-from chord_lib.responses.flask_errors import (
+from bento_lib.responses.flask_errors import (
     flask_error_wrap,
     flask_error_wrap_with_traceback,
     flask_bad_request_error,
