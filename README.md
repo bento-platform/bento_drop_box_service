@@ -1,6 +1,7 @@
 # Bento Drop Box Service
 
-![Build Status](https://api.travis-ci.com/bento-platform/bento_drop_box_service.svg?branch=master)
+![Test Status](https://github.com/bento-platform/bento_drop_box_service/workflows/Test/badge.svg)
+![Lint Status](https://github.com/bento-platform/bento_drop_box_service/workflows/Lint/badge.svg)
 [![codecov](https://codecov.io/gh/bento-platform/bento_drop_box_service/branch/master/graph/badge.svg)](https://codecov.io/gh/bento-platform/bento_drop_box_service)
 
 This is a small flask application providing files for ingestion (through `bento_web`,
