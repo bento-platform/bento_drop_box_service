@@ -17,6 +17,8 @@ If a `MINIO_URL` variable is set, the application will try and connect to
 a minIO instance, to do so you will also need to set `MINIO_USERNAME`,
 `MINIO_PASSWORD` and `MINIO_BUCKET`.
 
+
+
 ## Running in Development
 
 Development dependencies are described in `requirements.txt` and can be
@@ -31,3 +33,18 @@ To start the application:
 ```bash
 FLASK_APP=bento_drop_box_service.app flask run
 ```
+
+
+
+## Deploying
+
+
+The `bento_drop_box_service` service can be deployed with a WSGI server like 
+Gunicorn or UWSGI, specifying `bento_drop_box_service.app:application` as the 
+WSGI application.
+
+It is best to then put an HTTP server software such as NGINX in front of 
+Gunicorn. 
+
+**Flask applications should NEVER be deployed in production via the Flask 
+development server, i.e. `flask run`!**
