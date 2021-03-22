@@ -18,7 +18,7 @@ def client_minio():
     ctx.push()
 
     with mock_s3():
-        s3 = boto3.resource('s3', region_name='ca-central-1')
+        s3 = boto3.resource('s3')
         minio_backend = MinioBackend(resource=s3)
         g.backend = minio_backend
 
