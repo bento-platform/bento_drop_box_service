@@ -5,16 +5,18 @@
 [![codecov](https://codecov.io/gh/bento-platform/bento_drop_box_service/branch/master/graph/badge.svg)](https://codecov.io/gh/bento-platform/bento_drop_box_service)
 
 This is a small flask application providing files for ingestion (through `bento_web`,
-for `bento_wes`). By default the file served are read on the existing filesystem but
+for `bento_wes`). By default, the file served are read on the existing filesystem, but
 these can also be read from a minIO instance (or AWS S3 for that matter).
+
+
 
 ## Environment Variables
 
 If using the current filesystem to serve file, you can use the `SERVICE_DATA`
 environment variable to point to some location (./data by default).
 
-If a `MINIO_URL` variable is set, the application will try and connect to
-a minIO instance, to do so you will also need to set `MINIO_USERNAME`,
+If the `MINIO_URL` variable is set, the application will try to connect to
+a minIO instance. To do so, you will also need to set `MINIO_USERNAME`,
 `MINIO_PASSWORD` and `MINIO_BUCKET`.
 
 
