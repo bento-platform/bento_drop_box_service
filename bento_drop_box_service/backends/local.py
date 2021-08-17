@@ -78,7 +78,7 @@ class LocalBackend(DropBoxBackend):
                         return flask_bad_request_error("Cannot retrieve a directory")
 
                     return send_file(node["path"], mimetype="application/octet-stream", as_attachment=True,
-                                     attachment_filename=node["name"])
+                                     download_name=node["name"])
 
                 directory_items = node["contents"]
 

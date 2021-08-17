@@ -51,5 +51,5 @@ class MinioBackend(DropBoxBackend):
             content['Body'],
             mimetype="application/octet-stream",
             as_attachment=True,
-            attachment_filename=filename
+            download_name=filename
         )
