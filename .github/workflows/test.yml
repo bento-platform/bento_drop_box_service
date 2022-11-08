@@ -9,21 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.6, 3.9 ]
+        python-version: [ "3.8", "3.10" ]
     steps:
       - uses: actions/checkout@v1
+      - name: Install poetry
+        run: pip install poetry
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: poetry install
       - name: Test
         run: pytest -svv --cov=bento_drop_box_service --cov-branch
       - name: Codecov
         run: codecov
-  install:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ 3.6, 3.9 ]
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install bento_drop_box_service
-        run: pip install .
