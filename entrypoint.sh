@@ -7,5 +7,6 @@ fi
 
 uvicorn bento_drop_box_service.app:application \
   --workers 1 \
-  -k uvloop \
-  --bind "0.0.0.0:${INTERNAL_PORT}"
+  --loop uvloop \
+  --host 0.0.0.0 \
+  --port "${INTERNAL_PORT}"
