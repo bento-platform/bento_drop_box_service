@@ -71,7 +71,7 @@ class LocalBackend(DropBoxBackend):
         directory_items: tuple[DropBoxEntry, ...] = await self.get_directory_tree()
 
         # Otherwise, find the file if it exists and return it.
-        path_parts = path.split("/")  # TODO: Deal with slashes in file names
+        path_parts: list[str] = path.split("/")  # TODO: Deal with slashes in file names
 
         while len(path_parts) > 0:
             part = path_parts[0]
