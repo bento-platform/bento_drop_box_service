@@ -1,36 +1,48 @@
 from __future__ import annotations
 
 import aiofiles
+import aiofiles.os
+import aiofiles.ospath
 import os
 
 from bento_lib.responses.quart_errors import quart_bad_request_error, quart_not_found_error
+from typing import TypedDict
 from quart import current_app, send_file, Request, Response
 from werkzeug.utils import secure_filename
 
 from .base import DropBoxBackend
 
 
-class LocalBackend(DropBoxBackend):
-    def _get_directory_tree(self, directory, level=0) -> tuple[dict, ...]:
-        return tuple(
-            {
-                "name": entry,
-                "path": os.path.abspath(os.path.join(directory, entry)),
-                "contents": self._get_directory_tree(os.path.join(directory, entry), level=level + 1)
-            }
-            if os.path.isdir(os.path.join(directory, entry))
-            else {
-                "name": entry,
-                "path": os.path.abspath(os.path.join(directory, entry)),
-                "size": os.path.getsize(os.path.join(directory, entry))
-            }
-            for entry in os.listdir(directory)
-            if (level < current_app.config["TRAVERSAL_LIMIT"] or
-                not os.path.isdir(os.path.join(directory, entry))) and entry[0] != "."
-        )
+# TODO: py3.11: individual optional fields
+class DropBoxEntry(TypedDict, total=False):
+    name: str
+    path: str
+    size: int
+    contents: tuple[DropBoxEntry, ...]
 
-    async def get_directory_tree(self) -> tuple[dict, ...]:
-        return self._get_directory_tree(current_app.config["SERVICE_DATA"])
+
+class LocalBackend(DropBoxBackend):
+    async def _get_directory_tree(self, directory: str, level: int = 0) -> tuple[DropBoxEntry, ...]:
+        entries: list[DropBoxEntry] = []
+        # for some reason this doesn't work as a comprehension
+        # noinspection PyUnresolvedReferences
+        for entry in (await aiofiles.os.listdir(directory)):
+            if (level < current_app.config["TRAVERSAL_LIMIT"] or not (
+                    await aiofiles.ospath.isdir(os.path.join(directory, entry)))) and entry[0] != ".":
+                entries.append({
+                    "name": entry,
+                    "path": os.path.abspath(os.path.join(directory, entry)),
+                    **({
+                        "contents": await self._get_directory_tree(os.path.join(directory, entry), level=level + 1),
+                    } if (await aiofiles.ospath.isdir(os.path.join(directory, entry))) else {
+                        "size": await aiofiles.ospath.getsize(os.path.join(directory, entry)),
+                    })
+                })
+
+        return tuple(entries)
+
+    async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:
+        return await self._get_directory_tree(current_app.config["SERVICE_DATA"])
 
     async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:
         # TODO: This might not be secure (ok for now due to permissions check)
@@ -56,7 +68,7 @@ class LocalBackend(DropBoxBackend):
         return current_app.response_class(status=204)
 
     async def retrieve_from_path(self, path: str) -> Response:
-        directory_items: tuple[dict, ...] = await self.get_directory_tree()
+        directory_items: tuple[DropBoxEntry, ...] = await self.get_directory_tree()
 
         # Otherwise, find the file if it exists and return it.
         path_parts = path.split("/")  # TODO: Deal with slashes in file names
