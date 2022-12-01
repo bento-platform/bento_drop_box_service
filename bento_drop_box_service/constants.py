@@ -6,4 +6,8 @@ __all__ = [
 ]
 
 SERVICE_NAME = "Bento Drop Box Service"
-SERVICE_TYPE = "ca.c3g.bento:drop-box:{}".format(__version__)
+SERVICE_TYPE = {
+    "group": "ca.c3g.bento",
+    "artifact": "drop-box",
+    "version": __version__,
+}

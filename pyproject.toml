@@ -1,0 +1,36 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "bento_drop_box_service"
+version = "0.6.0"
+description = "Drop box and basic file management service for the Bento platform."
+authors = ["David Lougheed <david.lougheed@mail.mcgill.ca>", "Simon Chénard <simon.chenard2@mcgill.ca>"]
+readme = "README.md"
+packages = [{include = "bento_drop_box_service"}]
+repository = "https://github.com/bento-platform/bento_service_registry"
+license = "LGPL-3.0-only"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+    "Operating System :: OS Independent"
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+boto3 = "^1.26.4"
+quart = "^0.18.3"
+bento-lib = {extras = ["quart"], version = "^4.1.0"}
+aiofiles = "^22.1.0"
+
+[tool.poetry.group.dev.dependencies]
+tox = "^3.27.0"
+codecov = "^2.1.12"
+coverage = "^6.5.0"
+pytest = "^7.2.0"
+pytest-cov = "^4.0.0"
+moto = "^4.0.9"
+flake8 = "^5.0.4"
+pytest-asyncio = "^0.20.1"
+
