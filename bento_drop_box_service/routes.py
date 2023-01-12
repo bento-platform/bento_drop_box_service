@@ -6,7 +6,7 @@ from bento_lib.responses.quart_errors import (
 )
 from bento_drop_box_service import __version__
 from bento_drop_box_service.backend import get_backend
-from bento_drop_box_service.constants import SERVICE_NAME, SERVICE_TYPE
+from bento_drop_box_service.constants import BENTO_SERVICE_KIND, SERVICE_NAME, SERVICE_TYPE
 
 
 drop_box_service = Blueprint("drop_box_service", __name__)
@@ -57,7 +57,10 @@ async def service_info() -> Response:
             "name": "C3G",
             "url": "http://www.computationalgenomics.ca"
         },
-        "contactUrl": "mailto:david.lougheed@mail.mcgill.ca",
+        "contactUrl": "mailto:info@c3g.ca",
         "version": __version__,
         "env": "dev" if current_app.config["BENTO_DEBUG"] else "prod",
+        "bento": {
+            "serviceKind": BENTO_SERVICE_KIND,
+        },
     })
