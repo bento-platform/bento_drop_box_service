@@ -14,6 +14,11 @@ from werkzeug.utils import secure_filename
 from .base import DropBoxBackend
 
 
+# TODO: py3.10: remove in favour of [str].removeprefix(...)
+def _str_removeprefix_polyfill(s: str, prefix: str) -> str:
+    return s[len(prefix):] if s.startswith(prefix) else s
+
+
 # TODO: py3.11: individual optional fields
 class DropBoxEntry(TypedDict, total=False):
     name: str
@@ -43,7 +48,7 @@ class LocalBackend(DropBoxBackend):
                 entry_path = current_dir / entry
                 entries.append({
                     "name": entry,
-                    "path": str(entry_path).removeprefix(str(root_path)).lstrip("/"),
+                    "path": _str_removeprefix_polyfill(str(entry_path), str(root_path)).lstrip("/"),
                     **({
                         "contents": await self._get_directory_tree(root_path, (*sub_path, entry), level=level + 1),
                     } if (await aiofiles.ospath.isdir(entry_path)) else {
