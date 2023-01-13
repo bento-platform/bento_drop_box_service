@@ -22,7 +22,8 @@ def _str_removeprefix_polyfill(s: str, prefix: str) -> str:
 # TODO: py3.11: individual optional fields
 class DropBoxEntry(TypedDict, total=False):
     name: str
-    path: str
+    filePath: str
+    uri: str
     size: int
     contents: tuple[DropBoxEntry, ...]
 
@@ -48,11 +49,16 @@ class LocalBackend(DropBoxBackend):
                 entry_path = current_dir / entry
                 entries.append({
                     "name": entry,
-                    "path": _str_removeprefix_polyfill(str(entry_path), str(root_path)).lstrip("/"),
+                    "filePath": str(entry_path),
                     **({
                         "contents": await self._get_directory_tree(root_path, (*sub_path, entry), level=level + 1),
                     } if (await aiofiles.ospath.isdir(entry_path)) else {
                         "size": await aiofiles.ospath.getsize(entry_path),
+                        "uri": (
+                            current_app.config["SERVICE_URL"] +
+                            "/objects" +
+                            _str_removeprefix_polyfill(str(entry_path), str(root_path))
+                        ),
                     })
                 })
 
@@ -86,11 +92,14 @@ class LocalBackend(DropBoxBackend):
         return current_app.response_class(status=204)
 
     async def retrieve_from_path(self, path: str) -> Response:
-        root_path: pathlib.Path = pathlib.Path(current_app.config["SERVICE_DATA"])
+        root_path: pathlib.Path = pathlib.Path(current_app.config["SERVICE_DATA"]).absolute()
         directory_items: tuple[DropBoxEntry, ...] = await self.get_directory_tree()
 
+        # Manually crawl through the tree to only return items which are explicitly in the tree.
+
         # Otherwise, find the file if it exists and return it.
-        path_parts: list[str] = path.split("/")  # TODO: Deal with slashes in file names
+        # TODO: Deal with slashes in file names
+        path_parts: list[str] = _str_removeprefix_polyfill(path, str(root_path)).lstrip("/").split("/")
 
         while len(path_parts) > 0:
             part = path_parts[0]
@@ -107,7 +116,7 @@ class LocalBackend(DropBoxBackend):
                         return quart_bad_request_error("Cannot retrieve a directory")
 
                     return await send_file(
-                        root_path / node["path"],
+                        node["filePath"],
                         mimetype="application/octet-stream",
                         as_attachment=True,
                         attachment_filename=node["name"])

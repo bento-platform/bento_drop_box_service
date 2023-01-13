@@ -26,6 +26,7 @@ application.config.from_mapping(
     SERVICE_ID=os.environ.get("SERVICE_ID", SERVICE_TYPE),
     SERVICE_DATA_SOURCE="minio" if MINIO_URL else "local",
     SERVICE_DATA=None if MINIO_URL else SERVICE_DATA,
+    SERVICE_URL=os.environ.get("SERVICE_URL", "http://127.0.0.1:5000"),  # base URL to construct object URIs from
     MINIO_URL=MINIO_URL,
     MINIO_USERNAME=os.environ.get("MINIO_USERNAME") if MINIO_URL else None,
     MINIO_PASSWORD=os.environ.get("MINIO_PASSWORD") if MINIO_URL else None,
