@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import logging
-
 import aiofiles
 import aiofiles.os
 import aiofiles.ospath
@@ -92,8 +90,6 @@ class LocalBackend(DropBoxBackend):
         while len(path_parts) > 0:
             part = path_parts[0]
             path_parts = path_parts[1:]
-
-            print(directory_items, part)
 
             if part not in {item["name"] for item in directory_items}:
                 return quart_not_found_error("Nothing found at specified path")
