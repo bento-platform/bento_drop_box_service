@@ -19,10 +19,10 @@ async def _get_backend() -> Optional[DropBoxBackend]:
     # Make data directory/ies if needed
     if current_app.config["SERVICE_DATA_SOURCE"] == "local":
         os.makedirs(current_app.config["SERVICE_DATA"], exist_ok=True)
-        return LocalBackend()
+        return LocalBackend(logger=current_app.logger)
 
     elif current_app.config["SERVICE_DATA_SOURCE"] == "minio":
-        return MinioBackend()
+        return MinioBackend(logger=current_app.logger)
 
     return None
 

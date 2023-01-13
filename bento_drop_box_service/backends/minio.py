@@ -1,4 +1,5 @@
 import boto3
+import logging
 from typing import Tuple
 
 from botocore.exceptions import ClientError
@@ -11,8 +12,8 @@ from ..minio import S3Tree
 
 
 class MinioBackend(DropBoxBackend):
-    def __init__(self, resource=None):
-        super(MinioBackend, self).__init__()
+    def __init__(self, logger: logging.Logger, resource=None):
+        super(MinioBackend, self).__init__(logger)
 
         if resource:
             self.minio = resource
