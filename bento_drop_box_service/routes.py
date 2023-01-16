@@ -4,6 +4,7 @@ from bento_lib.responses.quart_errors import (
     quart_bad_request_error,
     quart_internal_server_error
 )
+from bento_lib.types import GA4GHServiceInfo
 from bento_drop_box_service import __version__
 from bento_drop_box_service.backend import get_backend
 from bento_drop_box_service.constants import BENTO_SERVICE_KIND, SERVICE_NAME, SERVICE_TYPE
@@ -48,19 +49,21 @@ async def drop_box_retrieve(path) -> Response:
 @drop_box_service.route("/service-info", methods=["GET"])
 async def service_info() -> Response:
     # Spec: https://github.com/ga4gh-discovery/ga4gh-service-info
-    return jsonify({
+    # Do a little type checking
+    info: GA4GHServiceInfo = {
         "id": current_app.config["SERVICE_ID"],
         "name": SERVICE_NAME,
         "type": SERVICE_TYPE,
         "description": "Drop box service for a Bento platform node.",
         "organization": {
             "name": "C3G",
-            "url": "http://www.computationalgenomics.ca"
+            "url": "https://www.computationalgenomics.ca"
         },
         "contactUrl": "mailto:info@c3g.ca",
         "version": __version__,
-        "env": "dev" if current_app.config["BENTO_DEBUG"] else "prod",
+        "environment": "dev" if current_app.config["BENTO_DEBUG"] else "prod",
         "bento": {
             "serviceKind": BENTO_SERVICE_KIND,
         },
-    })
+    }
+    return jsonify(info)
