@@ -23,7 +23,7 @@ application.config.from_mapping(
     BENTO_DEBUG=os.environ.get(
         "CHORD_DEBUG", os.environ.get("BENTO_DEBUG", os.environ.get("QUART_ENV", "production"))
     ).strip().lower() in ("true", "1", "development"),
-    SERVICE_ID=os.environ.get("SERVICE_ID", SERVICE_TYPE),
+    SERVICE_ID=os.environ.get("SERVICE_ID", str(":".join(SERVICE_TYPE.keys()[:2]))),
     SERVICE_DATA_SOURCE="minio" if MINIO_URL else "local",
     SERVICE_DATA=None if MINIO_URL else SERVICE_DATA,
     MINIO_URL=MINIO_URL,
