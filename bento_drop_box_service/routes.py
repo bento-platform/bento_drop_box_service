@@ -1,10 +1,11 @@
+import asyncio
 from quart import Blueprint, current_app, jsonify, request, Response
 from bento_lib.auth.quart_decorators import quart_permissions_owner
 from bento_lib.responses.quart_errors import (
     quart_bad_request_error,
     quart_internal_server_error
 )
-from bento_lib.types import GA4GHServiceInfo
+from bento_lib.types import GA4GHServiceInfo, BentoExtraServiceInfo
 from bento_drop_box_service import __version__
 from bento_drop_box_service.backend import get_backend
 from bento_drop_box_service.constants import BENTO_SERVICE_KIND, SERVICE_NAME, SERVICE_TYPE
@@ -46,9 +47,37 @@ async def drop_box_retrieve(path) -> Response:
     return await backend.retrieve_from_path(path)
 
 
+async def _git_stdout(*args) -> str:
+    git_proc = await asyncio.create_subprocess_exec(
+        "git", *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    res, _ = await git_proc.communicate()
+    return res.decode().rstrip()
+
+
 @drop_box_service.route("/service-info", methods=["GET"])
 async def service_info() -> Response:
     # Spec: https://github.com/ga4gh-discovery/ga4gh-service-info
+
+    bento_info: BentoExtraServiceInfo = {
+        "serviceKind": BENTO_SERVICE_KIND
+    }
+
+    debug_mode = current_app.config["BENTO_DEBUG"]
+    if debug_mode:
+        try:
+            if res_tag := await _git_stdout("describe", "--tags", "--abbrev=0"):
+                # noinspection PyTypeChecker
+                bento_info["gitTag"] = res_tag
+            if res_branch := await _git_stdout("branch", "--show-current"):
+                # noinspection PyTypeChecker
+                bento_info["gitBranch"] = res_branch
+            if res_commit := await _git_stdout("rev-parse", "HEAD"):
+                # noinspection PyTypeChecker
+                bento_info["gitCommit"] = res_commit
+
+        except Exception as e:
+            current_app.logger.error(f"Error retrieving git information: {type(e).__name__}")
+
     # Do a little type checking
     info: GA4GHServiceInfo = {
         "id": current_app.config["SERVICE_ID"],
@@ -62,8 +91,7 @@ async def service_info() -> Response:
         "contactUrl": "mailto:info@c3g.ca",
         "version": __version__,
         "environment": "dev" if current_app.config["BENTO_DEBUG"] else "prod",
-        "bento": {
-            "serviceKind": BENTO_SERVICE_KIND,
-        },
+        "bento": bento_info,
     }
+
     return jsonify(info)
