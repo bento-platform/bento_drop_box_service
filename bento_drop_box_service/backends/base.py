@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import Tuple
 from werkzeug import Request, Response
@@ -7,6 +8,9 @@ __all__ = ["DropBoxBackend"]
 
 
 class DropBoxBackend(ABC):
+    def __init__(self, logger: logging.Logger):
+        self.logger = logger
+
     @abstractmethod
     async def get_directory_tree(self) -> Tuple[dict]:
         pass

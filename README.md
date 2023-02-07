@@ -12,6 +12,9 @@ these can also be read from a minIO instance (or AWS S3 for that matter).
 
 ## Environment Variables
 
+Set `SERVICE_URL` to the base URL of the service (e.g. `https://bentov2.local/api/drop-box`).
+This is used for file URI generation.
+
 If using the current filesystem to serve file, you can use the `SERVICE_DATA`
 environment variable to point to some location (./data by default).
 

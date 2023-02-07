@@ -4,45 +4,69 @@ import aiofiles
 import aiofiles.os
 import aiofiles.ospath
 import os
+import pathlib
 
 from bento_lib.responses.quart_errors import quart_bad_request_error, quart_not_found_error
-from typing import TypedDict
+from typing import Tuple, TypedDict
 from quart import current_app, send_file, Request, Response
 from werkzeug.utils import secure_filename
 
 from .base import DropBoxBackend
 
 
+# TODO: py3.10: remove in favour of [str].removeprefix(...)
+def _str_removeprefix_polyfill(s: str, prefix: str) -> str:
+    return s[len(prefix):] if s.startswith(prefix) else s
+
+
 # TODO: py3.11: individual optional fields
 class DropBoxEntry(TypedDict, total=False):
     name: str
-    path: str
+    filePath: str
+    uri: str
     size: int
     contents: tuple[DropBoxEntry, ...]
 
 
 class LocalBackend(DropBoxBackend):
-    async def _get_directory_tree(self, directory: str, level: int = 0) -> tuple[DropBoxEntry, ...]:
+    async def _get_directory_tree(
+        self,
+        root_path: pathlib.Path,
+        sub_path: Tuple[str, ...],
+        level: int = 0,
+    ) -> tuple[DropBoxEntry, ...]:
+        root_path = root_path.absolute()
         entries: list[DropBoxEntry] = []
-        # for some reason this doesn't work as a comprehension
+        sub_path_str: str = "/".join(sub_path)
+        current_dir = (root_path / sub_path_str).absolute()
         # noinspection PyUnresolvedReferences
-        for entry in (await aiofiles.os.listdir(directory)):
+        for entry in (await aiofiles.os.listdir(current_dir)):
             if (level < current_app.config["TRAVERSAL_LIMIT"] or not (
-                    await aiofiles.ospath.isdir(os.path.join(directory, entry)))) and entry[0] != ".":
+                    await aiofiles.ospath.isdir(current_dir))) and entry[0] != ".":
+                if "/" in entry:
+                    self.logger.warning(f"Skipped entry with a '/' in its name: {entry}")
+                    continue
+                entry_path = current_dir / entry
                 entries.append({
                     "name": entry,
-                    "path": os.path.abspath(os.path.join(directory, entry)),
+                    "filePath": str(entry_path),
                     **({
-                        "contents": await self._get_directory_tree(os.path.join(directory, entry), level=level + 1),
-                    } if (await aiofiles.ospath.isdir(os.path.join(directory, entry))) else {
-                        "size": await aiofiles.ospath.getsize(os.path.join(directory, entry)),
+                        "contents": await self._get_directory_tree(root_path, (*sub_path, entry), level=level + 1),
+                    } if (await aiofiles.ospath.isdir(entry_path)) else {
+                        "size": await aiofiles.ospath.getsize(entry_path),
+                        "uri": (
+                            current_app.config["SERVICE_URL"] +
+                            "/objects" +
+                            _str_removeprefix_polyfill(str(entry_path), str(root_path))
+                        ),
                     })
                 })
 
         return tuple(entries)
 
     async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:
-        return await self._get_directory_tree(current_app.config["SERVICE_DATA"])
+        root_path: pathlib.Path = pathlib.Path(current_app.config["SERVICE_DATA"])
+        return await self._get_directory_tree(root_path, (".",))
 
     async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:
         # TODO: This might not be secure (ok for now due to permissions check)
@@ -68,10 +92,14 @@ class LocalBackend(DropBoxBackend):
         return current_app.response_class(status=204)
 
     async def retrieve_from_path(self, path: str) -> Response:
+        root_path: pathlib.Path = pathlib.Path(current_app.config["SERVICE_DATA"]).absolute()
         directory_items: tuple[DropBoxEntry, ...] = await self.get_directory_tree()
 
+        # Manually crawl through the tree to only return items which are explicitly in the tree.
+
         # Otherwise, find the file if it exists and return it.
-        path_parts: list[str] = path.split("/")  # TODO: Deal with slashes in file names
+        # TODO: Deal with slashes in file names
+        path_parts: list[str] = _str_removeprefix_polyfill(path, str(root_path)).lstrip("/").split("/")
 
         while len(path_parts) > 0:
             part = path_parts[0]
@@ -87,8 +115,11 @@ class LocalBackend(DropBoxBackend):
                     if len(path_parts) > 0:
                         return quart_bad_request_error("Cannot retrieve a directory")
 
-                    return await send_file(node["path"], mimetype="application/octet-stream", as_attachment=True,
-                                           attachment_filename=node["name"])
+                    return await send_file(
+                        node["filePath"],
+                        mimetype="application/octet-stream",
+                        as_attachment=True,
+                        attachment_filename=node["name"])
 
                 directory_items = node["contents"]
 
