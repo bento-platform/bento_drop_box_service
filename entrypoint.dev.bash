@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+
+# Set .gitconfig for development
+/set_gitconfig.bash
 
 export QUART_ENV=development
 export QUART_APP=bento_drop_box_service.app:application
