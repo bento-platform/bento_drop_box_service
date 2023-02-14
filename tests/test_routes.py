@@ -45,5 +45,31 @@ async def test_tree_local(client_local):
 @pytest.mark.asyncio
 async def test_object_download_local(client_local):
     res = await client_local.get("/objects/patate.txt")
-
     assert res.status_code == 200
+
+    res = await client_local.get("/objects/some_dir/some_other_dir/patate.txt")
+    assert res.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_object_download_local_404(client_local):
+    res = await client_local.get("/objects/peel.txt")
+    assert res.status_code == 404
+
+    res = await client_local.get("/objects/some_dir/some_other_dir/peel.txt")
+    assert res.status_code == 404
+
+    res = await client_local.get("/objects/some_dir/empty_dir/patate.txt")
+    assert res.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_object_download_local_file_as_dir(client_local):
+    res = await client_local.get("/objects/patate.txt/tuber")
+    assert res.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_folder_download_error_local(client_local):
+    res = await client_local.get("/objects/some_dir/")
+    assert res.status_code == 400
