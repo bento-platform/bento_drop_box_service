@@ -25,6 +25,8 @@ class DropBoxEntry(TypedDict, total=False):
     filePath: str
     uri: str
     size: int
+    last_modified: float
+    last_metadata_change: float
     contents: tuple[DropBoxEntry, ...]
 
 
@@ -46,14 +48,19 @@ class LocalBackend(DropBoxBackend):
                 if "/" in entry:
                     self.logger.warning(f"Skipped entry with a '/' in its name: {entry}")
                     continue
+
                 entry_path = current_dir / entry
+                entry_path_stat = entry_path.stat()
+
                 entries.append({
                     "name": entry,
                     "filePath": str(entry_path),
                     **({
                         "contents": await self._get_directory_tree(root_path, (*sub_path, entry), level=level + 1),
                     } if (await aiofiles.ospath.isdir(entry_path)) else {
-                        "size": await aiofiles.ospath.getsize(entry_path),
+                        "size": entry_path_stat.st_size,
+                        "last_modified": entry_path_stat.st_mtime,
+                        "last_metadata_change": entry_path_stat.st_ctime,
                         "uri": (
                             current_app.config["SERVICE_URL"] +
                             "/objects" +
