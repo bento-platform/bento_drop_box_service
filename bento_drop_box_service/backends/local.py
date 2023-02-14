@@ -25,8 +25,8 @@ class DropBoxEntry(TypedDict, total=False):
     filePath: str
     uri: str
     size: int
-    last_modified: float
-    last_metadata_change: float
+    lastModified: float
+    lastMetadataChange: float
     contents: tuple[DropBoxEntry, ...]
 
 
@@ -59,8 +59,8 @@ class LocalBackend(DropBoxBackend):
                         "contents": await self._get_directory_tree(root_path, (*sub_path, entry), level=level + 1),
                     } if (await aiofiles.ospath.isdir(entry_path)) else {
                         "size": entry_path_stat.st_size,
-                        "last_modified": entry_path_stat.st_mtime,
-                        "last_metadata_change": entry_path_stat.st_ctime,
+                        "lastModified": entry_path_stat.st_mtime,
+                        "lastMetadataChange": entry_path_stat.st_ctime,
                         "uri": (
                             current_app.config["SERVICE_URL"] +
                             "/objects" +
