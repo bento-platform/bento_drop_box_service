@@ -106,9 +106,9 @@ class LocalBackend(DropBoxBackend):
 
         # Otherwise, find the file if it exists and return it.
         # TODO: Deal with slashes in file names
-        path_parts: list[str] = _str_removeprefix_polyfill(path, str(root_path)).lstrip("/").split("/")
+        path_parts: list[str] = _str_removeprefix_polyfill(path, str(root_path)).strip("/").split("/")
 
-        while len(path_parts) > 0:
+        while True:
             part = path_parts[0]
             path_parts = path_parts[1:]
 
@@ -118,8 +118,8 @@ class LocalBackend(DropBoxBackend):
             try:
                 node = next(item for item in directory_items if item["name"] == part)
 
-                if "contents" not in node:
-                    if len(path_parts) > 0:
+                if not path_parts:  # End of the path
+                    if "contents" in node:
                         return quart_bad_request_error("Cannot retrieve a directory")
 
                     return await send_file(
@@ -128,7 +128,11 @@ class LocalBackend(DropBoxBackend):
                         as_attachment=True,
                         attachment_filename=node["name"])
 
+                if "contents" not in node:
+                    return quart_bad_request_error(f"{node['name']} is not a directory")
+
                 directory_items = node["contents"]
+                # Go around another iteration, nesting into this directory
 
             except StopIteration:
                 return quart_not_found_error("Nothing found at specified path")
