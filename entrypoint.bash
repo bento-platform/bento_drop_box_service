@@ -1,12 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
-if [ -z "${INTERNAL_PORT}" ]; then
-  # Set default internal port to 5000
-  export INTERNAL_PORT=5000
+# Create bento_user + home
+source /create_service_user.bash
+
+# Fix permissions on /drop-box
+chown -R bento_user:bento_user /drop-box
+
+# Fix permissions on the data directory
+if [[ -n "${SERVICE_DATA}" ]]; then
+  chown -R bento_user:bento_user "${SERVICE_DATA}"
+  chmod -R o-rwx "${SERVICE_DATA}"  # Remove all access from others
 fi
 
-uvicorn bento_drop_box_service.app:application \
-  --workers 1 \
-  --loop uvloop \
-  --host 0.0.0.0 \
-  --port "${INTERNAL_PORT}"
+# Drop into bento_user from root and execute the CMD specified for the image
+exec gosu bento_user "$@"

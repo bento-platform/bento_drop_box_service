@@ -1,4 +1,4 @@
-FROM ghcr.io/bento-platform/bento_base_image:python-debian-2023.02.09
+FROM ghcr.io/bento-platform/bento_base_image:python-debian-2023.02.21
 
 RUN pip install --no-cache-dir poetry==1.3.2 "uvicorn[standard]==0.20.0"
 
@@ -15,7 +15,9 @@ COPY poetry.lock .
 RUN poetry install --no-root
 
 # Don't include actual code in the development image - will be mounted in using a volume.
-# Include an entrypoint just so we have somewhere to start.
-COPY entrypoint.dev.bash .
+# Include an entrypoint + runner just so we have somewhere to start.
+COPY entrypoint.bash .
+COPY run.dev.bash .
 
-CMD [ "bash", "./entrypoint.dev.bash" ]
+ENTRYPOINT [ "bash", "./entrypoint.bash" ]
+CMD [ "bash", "./run.dev.bash" ]
