@@ -4,7 +4,7 @@
 /set_gitconfig.bash
 
 # Source the development virtual environment
-source ./env/bin/activate
+source /env/bin/activate
 
 # Update dependencies and install module locally (similar to pip install -e: "editable mode")
 poetry install
