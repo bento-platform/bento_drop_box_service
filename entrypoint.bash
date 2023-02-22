@@ -1,7 +1,15 @@
 #!/bin/bash
 
+cd /drop-box || exit
+
 # Create bento_user + home
 source /create_service_user.bash
+
+# Update dependencies before we drop down from root, if we're in dev mode
+if [[ -n "${BENTO_DROP_BOX_ABOUT_TO_RUN_DEV}" ]]; then
+  # Install module locally (similar to pip install -e: "editable mode")
+  poetry install
+fi
 
 # Fix permissions on /drop-box
 chown -R bento_user:bento_user /drop-box

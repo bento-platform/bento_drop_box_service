@@ -19,5 +19,8 @@ RUN poetry install --no-root
 COPY entrypoint.bash .
 COPY run.dev.bash .
 
+# Special flag for the entrypoint so it knows to install dependencies & module locally
+ENV BENTO_DROP_BOX_ABOUT_TO_RUN_DEV=1
+
 ENTRYPOINT [ "bash", "./entrypoint.bash" ]
 CMD [ "bash", "./run.dev.bash" ]
