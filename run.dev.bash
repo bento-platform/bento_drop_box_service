@@ -3,6 +3,12 @@
 # Set .gitconfig for development
 /set_gitconfig.bash
 
+# Source the development virtual environment
+source ./env/bin/activate
+
+# Update dependencies and install module locally (similar to pip install -e: "editable mode")
+poetry install
+
 export QUART_ENV=development
 export QUART_APP=bento_drop_box_service.app:application
 
