@@ -6,7 +6,10 @@ cd /drop-box || exit
 source /create_service_user.bash
 
 # Fix permissions on /drop-box and /env
-chown -R bento_user:bento_user /drop-box /env
+chown -R bento_user:bento_user /drop-box
+if [[ -d /env ]]; then
+  chown -R bento_user:bento_user /env
+fi
 
 # Fix permissions on the data directory
 if [[ -n "${SERVICE_DATA}" ]]; then
