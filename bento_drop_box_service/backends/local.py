@@ -69,7 +69,7 @@ class LocalBackend(DropBoxBackend):
                     })
                 })
 
-        return tuple(entries)
+        return tuple(sorted(entries, key=lambda e: e["name"]))
 
     async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:
         root_path: pathlib.Path = pathlib.Path(current_app.config["SERVICE_DATA"])
