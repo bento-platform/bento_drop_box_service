@@ -1,23 +1,18 @@
 #!/bin/bash
 
-# Set .gitconfig for development
-/set_gitconfig.bash
-
-# Source the development virtual environment
-source /env/bin/activate
-
-# Update dependencies and install module locally (similar to pip install -e: "editable mode")
-poetry install
+# Update dependencies and install module locally
+/poetry_user_install_dev.bash
 
 export QUART_ENV='development'
 export QUART_APP='bento_drop_box_service.app:application'
 
-if [[ -z "${INTERNAL_PORT}" ]]; then
-  # Set default internal port to 5000
-  INTERNAL_PORT=5000
-fi
+# Set default internal port to 5000
+: "${INTERNAL_PORT:=5000}"
+
+# Set default debugger port to debugpy default
+: "${DEBUGGER_PORT:=5678}"
 
 # Module was installed locally in entrypoint before dropping into root
-python -m debugpy --listen 0.0.0.0:5678 -m quart run \
+python -m debugpy --listen "0.0.0.0:${DEBUGGER_PORT}" -m quart run \
   --host 0.0.0.0 \
   --port "${INTERNAL_PORT}"
