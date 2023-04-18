@@ -22,5 +22,5 @@ jobs:
         run: poetry install
       - name: Test
         run: pytest -svv --cov=bento_drop_box_service --cov-branch
-      - name: Codecov
-        run: codecov
+      - name: Upload coverage to Codecov
+        run: codecov/codecov-action@v3
