@@ -5,6 +5,7 @@ import aiofiles.os
 import aiofiles.ospath
 import os
 import pathlib
+import urllib.parse
 
 from bento_lib.responses.quart_errors import quart_bad_request_error, quart_not_found_error
 from typing import Tuple, TypedDict
@@ -63,8 +64,9 @@ class LocalBackend(DropBoxBackend):
                         "lastMetadataChange": entry_path_stat.st_ctime,
                         "uri": (
                             current_app.config["SERVICE_URL"] +
-                            "/objects" +
-                            _str_removeprefix_polyfill(str(entry_path), str(root_path))
+                            "/objects/" +
+                            urllib.parse.quote(
+                                _str_removeprefix_polyfill(str(entry_path), str(root_path) + "/"), safe="")
                         ),
                     })
                 })
