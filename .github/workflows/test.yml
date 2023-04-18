@@ -23,4 +23,4 @@ jobs:
       - name: Test
         run: pytest -svv --cov=bento_drop_box_service --cov-branch
       - name: Upload coverage to Codecov
-        run: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v3
