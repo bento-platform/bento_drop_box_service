@@ -94,7 +94,7 @@ class LocalBackend(DropBoxBackend):
         except FileNotFoundError:  # blank dirname
             pass
 
-        with aiofiles.open(upload_path, "wb") as f:
+        async with aiofiles.open(upload_path, "wb") as f:
             async for chunk in request.body:
                 await f.write(chunk)
 
