@@ -185,28 +185,29 @@ tests-no-zope = ["cloudpickle", "hypothesis", "mypy (>=1.1.1)", "pympler", "pyte
 
 [[package]]
 name = "bento-lib"
-version = "5.4.0"
+version = "6.1.0"
 description = "A set of common utilities and helpers for Bento platform services."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.8.1"
 files = [
-    {file = "bento_lib-5.4.0-py3-none-any.whl", hash = "sha256:4bba8fa2a8510d16dcec6800354096a218b1320858175b0e90719af85f584a13"},
-    {file = "bento_lib-5.4.0.tar.gz", hash = "sha256:db21a35d5135ad58ad1cb49c4c66b0637d500d52ee188ed5db0df1fdc09b0727"},
+    {file = "bento_lib-6.1.0-py3-none-any.whl", hash = "sha256:328f21d769ffeb2959bd4648a34164546eb61f2741325df63f96c729b4f65d97"},
+    {file = "bento_lib-6.1.0.tar.gz", hash = "sha256:06cda1ce6e639a0a10b788caf3cfe1975c284bdaa429f4933e30b9886e45bc2d"},
 ]
 
 [package.dependencies]
-aiohttp = ">=3.8.3,<4"
-jsonschema = ">=3.2.0,<5"
-psycopg2-binary = ">=2.8.6,<3.0"
-quart = {version = ">=0.18.3,<0.19", optional = true, markers = "extra == \"quart\""}
-redis = ">=3.5.3,<4.0"
+aiohttp = ">=3.8.4,<4"
+fastapi = {version = ">=0.95.2,<0.96", optional = true, markers = "extra == \"fastapi\""}
+jsonschema = ">=4.17.3,<5"
+psycopg2-binary = ">=2.9.5,<3.0"
+redis = ">=4.5.1,<5.0"
 requests = ">=2.28.1,<3"
-Werkzeug = ">=2.0.1,<3"
+Werkzeug = ">=2.2.3,<3"
 
 [package.extras]
-django = ["Django (>=4.1.1,<5)", "djangorestframework (>=3.13.1,<3.15)"]
-flask = ["Flask (>=2.0.1,<3)"]
-quart = ["quart (>=0.18.3,<0.19)"]
+django = ["Django (>=4.1.9,<5)", "djangorestframework (>=3.14.0,<3.15)"]
+fastapi = ["fastapi (>=0.95.2,<0.96)"]
+flask = ["Flask (>=2.2.5,<3)"]
+quart = ["quart (>=0.18.4,<0.19)"]
 
 [[package]]
 name = "blinker"
@@ -1540,17 +1541,21 @@ dotenv = ["python-dotenv"]
 
 [[package]]
 name = "redis"
-version = "3.5.3"
-description = "Python client for Redis key-value store"
+version = "4.5.5"
+description = "Python client for Redis database and key-value store"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+python-versions = ">=3.7"
 files = [
-    {file = "redis-3.5.3-py2.py3-none-any.whl", hash = "sha256:432b788c4530cfe16d8d943a09d40ca6c16149727e4afe8c2c9d5580c59d9f24"},
-    {file = "redis-3.5.3.tar.gz", hash = "sha256:0e7e0cfca8660dea8b7d5cd8c4f6c5e29e11f31158c0b0ae91a397f00e5a05a2"},
+    {file = "redis-4.5.5-py3-none-any.whl", hash = "sha256:77929bc7f5dab9adf3acba2d3bb7d7658f1e0c2f1cafe7eb36434e751c471119"},
+    {file = "redis-4.5.5.tar.gz", hash = "sha256:dc87a0bdef6c8bfe1ef1e1c40be7034390c2ae02d92dcd0c7ca1729443899880"},
 ]
 
+[package.dependencies]
+async-timeout = {version = ">=4.0.2", markers = "python_full_version <= \"3.11.2\""}
+
 [package.extras]
-hiredis = ["hiredis (>=0.1.3)"]
+hiredis = ["hiredis (>=1.0.0)"]
+ocsp = ["cryptography (>=36.0.1)", "pyopenssl (==20.0.1)", "requests (>=2.26.0)"]
 
 [[package]]
 name = "requests"
@@ -1888,4 +1893,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10.0"
-content-hash = "3a16c780a0368b0e2e0b016603541d102b1d007bf6be2bb7a65dc8bba713014b"
+content-hash = "c12be642898063ceee918a9a1c6477cb5ba1e741dfb19107919940b6773d1028"
