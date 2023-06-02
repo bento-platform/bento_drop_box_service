@@ -8,6 +8,8 @@ This is a small Quart application providing files for ingestion (through `bento_
 for `bento_wes`). By default, the file served are read on the existing filesystem, but
 these can also be read from a minIO instance (or AWS S3 for that matter).
 
+**Requires:** Python 3.10+ and Poetry 1.5+
+
 
 
 ## Environment Variables

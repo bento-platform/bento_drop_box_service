@@ -6,8 +6,6 @@ from .backends.base import DropBoxBackend
 from .backends.local import LocalBackend
 from .backends.minio import MinioBackend
 
-from typing import Optional
-
 
 __all__ = [
     "get_backend",
@@ -15,7 +13,7 @@ __all__ = [
 ]
 
 
-async def _get_backend() -> Optional[DropBoxBackend]:
+async def _get_backend() -> DropBoxBackend | None:
     # Make data directory/ies if needed
     if current_app.config["SERVICE_DATA_SOURCE"] == "local":
         os.makedirs(current_app.config["SERVICE_DATA"], exist_ok=True)
@@ -27,7 +25,7 @@ async def _get_backend() -> Optional[DropBoxBackend]:
     return None
 
 
-async def get_backend() -> Optional[DropBoxBackend]:
+async def get_backend() -> DropBoxBackend | None:
     if "backend" not in g:
         g.backend = await _get_backend()
     return g.backend

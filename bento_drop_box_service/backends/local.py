@@ -5,19 +5,13 @@ import aiofiles.os
 import aiofiles.ospath
 import os
 import pathlib
-import urllib.parse
 
 from bento_lib.responses.quart_errors import quart_bad_request_error, quart_not_found_error
-from typing import Tuple, TypedDict
+from typing import TypedDict
 from quart import current_app, send_file, Request, Response
 from werkzeug.utils import secure_filename
 
 from .base import DropBoxBackend
-
-
-# TODO: py3.10: remove in favour of [str].removeprefix(...)
-def _str_removeprefix_polyfill(s: str, prefix: str) -> str:
-    return s[len(prefix):] if s.startswith(prefix) else s
 
 
 # TODO: py3.11: individual optional fields
@@ -36,7 +30,7 @@ class LocalBackend(DropBoxBackend):
     async def _get_directory_tree(
         self,
         root_path: pathlib.Path,
-        sub_path: Tuple[str, ...],
+        sub_path: tuple[str, ...],
         level: int = 0,
     ) -> tuple[DropBoxEntry, ...]:
         root_path = root_path.absolute()
@@ -66,12 +60,7 @@ class LocalBackend(DropBoxBackend):
                         "size": entry_path_stat.st_size,
                         "lastModified": entry_path_stat.st_mtime,
                         "lastMetadataChange": entry_path_stat.st_ctime,
-                        "uri": (
-                            current_app.config["SERVICE_URL"] +
-                            "/objects/" +
-                            urllib.parse.quote(
-                                _str_removeprefix_polyfill(str(entry_path), str(root_path) + "/"), safe="")
-                        ),
+                        "uri": current_app.config["SERVICE_URL"] + f"/objects{rel_path}",
                     })
                 })
 
@@ -112,7 +101,7 @@ class LocalBackend(DropBoxBackend):
 
         # Otherwise, find the file if it exists and return it.
         # TODO: Deal with slashes in file names
-        path_parts: list[str] = _str_removeprefix_polyfill(path, str(root_path)).strip("/").split("/")
+        path_parts: list[str] = path.removeprefix(str(root_path)).strip("/").split("/")
 
         while True:
             part = path_parts[0]

@@ -1,6 +1,5 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Tuple
 from werkzeug import Request, Response
 
 
@@ -12,7 +11,7 @@ class DropBoxBackend(ABC):
         self.logger = logger
 
     @abstractmethod
-    async def get_directory_tree(self) -> Tuple[dict]:
+    async def get_directory_tree(self) -> tuple[dict, ...]:
         pass
 
     @abstractmethod

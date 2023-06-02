@@ -29,7 +29,7 @@ class MinioBackend(DropBoxBackend):
 
         self.bucket = self.minio.Bucket(current_app.config["MINIO_BUCKET"])
 
-    async def get_directory_tree(self) -> Tuple[dict]:
+    async def get_directory_tree(self) -> Tuple[dict, ...]:
         tree = S3Tree()
 
         for obj in self.bucket.objects.all():
