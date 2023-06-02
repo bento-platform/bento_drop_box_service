@@ -2,13 +2,24 @@ import logging
 from abc import ABC, abstractmethod
 from werkzeug import Request, Response
 
+from ..config import Config
+
 
 __all__ = ["DropBoxBackend"]
 
 
 class DropBoxBackend(ABC):
-    def __init__(self, logger: logging.Logger):
-        self.logger = logger
+    def __init__(self, config: Config, logger: logging.Logger):
+        self._config = config
+        self._logger = logger
+
+    @property
+    def config(self) -> Config:
+        return self._config
+
+    @property
+    def logger(self) -> logging.Logger:
+        return self._logger
 
     @abstractmethod
     async def get_directory_tree(self) -> tuple[dict, ...]:
