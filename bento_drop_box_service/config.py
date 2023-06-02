@@ -28,6 +28,8 @@ class Config(BaseSettings):
 
     traversal_limit: int = 16
 
+    log_level: Literal["debug", "info", "warning", "error"] = "debug"
+
     class Config:
         # Make parent Config instances hashable + immutable
         allow_mutation = False
