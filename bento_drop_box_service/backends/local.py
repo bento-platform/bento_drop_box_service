@@ -24,6 +24,7 @@ def _str_removeprefix_polyfill(s: str, prefix: str) -> str:
 class DropBoxEntry(TypedDict, total=False):
     name: str
     filePath: str
+    relativePath: str
     uri: str
     size: int
     lastModified: float
@@ -41,7 +42,7 @@ class LocalBackend(DropBoxBackend):
         root_path = root_path.absolute()
         entries: list[DropBoxEntry] = []
         sub_path_str: str = "/".join(sub_path)
-        current_dir = (root_path / sub_path_str).absolute()
+        current_dir = (root_path / sub_path_str).absolute() if sub_path_str else root_path.absolute()
         # noinspection PyUnresolvedReferences
         for entry in (await aiofiles.os.listdir(current_dir)):
             if (level < current_app.config["TRAVERSAL_LIMIT"] or not (
@@ -53,9 +54,12 @@ class LocalBackend(DropBoxBackend):
                 entry_path = current_dir / entry
                 entry_path_stat = entry_path.stat()
 
+                rel_path = (f"/{sub_path_str}" if sub_path_str else "") + f"/{entry}"
+
                 entries.append({
                     "name": entry,
-                    "filePath": str(entry_path),
+                    "filePath": str(entry_path),  # Actual path on file system
+                    "relativePath": rel_path,  # Path relative to root of drop box (/)
                     **({
                         "contents": await self._get_directory_tree(root_path, (*sub_path, entry), level=level + 1),
                     } if (await aiofiles.ospath.isdir(entry_path)) else {
@@ -75,7 +79,7 @@ class LocalBackend(DropBoxBackend):
 
     async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:
         root_path: pathlib.Path = pathlib.Path(current_app.config["SERVICE_DATA"])
-        return await self._get_directory_tree(root_path, (".",))
+        return await self._get_directory_tree(root_path, ())
 
     async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:
         # TODO: This might not be secure (ok for now due to permissions check)
