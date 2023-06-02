@@ -23,6 +23,7 @@ boto3 = "^1.26.65"
 quart = "^0.18.3"
 bento-lib = {extras = ["quart"], version = "^5.4.0"}
 aiofiles = "^23.1.0"
+fastapi = "^0.95.2"
 
 [tool.poetry.group.dev.dependencies]
 tox = "^4.4.5"
