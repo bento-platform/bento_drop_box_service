@@ -1,6 +1,3 @@
-from quart import url_for
-
-
 class S3File:
     def __init__(self, obj, name):
         self.name = name
@@ -10,7 +7,7 @@ class S3File:
     def serialize(self):
         return {
             "name": self.name,
-            "path": url_for('drop_box_service.drop_box_retrieve', path=self.path, _external=True),
+            "relativePath": url_for('drop_box_service.drop_box_retrieve', path=self.path, _external=True),
             "size": self.size
         }
 

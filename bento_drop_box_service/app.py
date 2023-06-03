@@ -1,46 +1,18 @@
-import os
+from bento_lib.responses.fastapi_errors import http_exception_handler_factory, validation_exception_handler
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from bento_lib.responses.quart_errors import (
-    quart_error_wrap,
-    quart_error_wrap_with_traceback,
-    quart_bad_request_error,
-    quart_not_found_error,
-    quart_internal_server_error
-)
-from quart import Quart
-from werkzeug.exceptions import BadRequest, NotFound
-
-from bento_drop_box_service.backend import close_backend
-from bento_drop_box_service.constants import SERVICE_NAME, SERVICE_TYPE
-from bento_drop_box_service.routes import drop_box_service
+from .config import get_config
+from .logger import get_logger
+from .routes import drop_box_router
 
 
-SERVICE_DATA = os.environ.get("SERVICE_DATA", "data/")
-MINIO_URL = os.environ.get("MINIO_URL", None)
+application = FastAPI()
+application.include_router(drop_box_router)
 
-application = Quart(__name__)
-application.config.from_mapping(
-    BENTO_DEBUG=os.environ.get(
-        "CHORD_DEBUG", os.environ.get("BENTO_DEBUG", os.environ.get("QUART_ENV", "production"))
-    ).strip().lower() in ("true", "1", "development"),
-    SERVICE_ID=os.environ.get("SERVICE_ID", str(":".join(list(SERVICE_TYPE.values())[:2]))),
-    SERVICE_DATA_SOURCE="minio" if MINIO_URL else "local",
-    SERVICE_DATA=None if MINIO_URL else SERVICE_DATA,
-    SERVICE_URL=os.environ.get("SERVICE_URL", "http://127.0.0.1:5000"),  # base URL to construct object URIs from
-    MINIO_URL=MINIO_URL,
-    MINIO_USERNAME=os.environ.get("MINIO_USERNAME") if MINIO_URL else None,
-    MINIO_PASSWORD=os.environ.get("MINIO_PASSWORD") if MINIO_URL else None,
-    MINIO_BUCKET=os.environ.get("MINIO_BUCKET") if MINIO_URL else None,
-    MINIO_RESOURCE=None,  # manual application-wide override for MinIO boto3 resource
-    TRAVERSAL_LIMIT=16,
-)
+application.add_middleware(CORSMiddleware)
 
-application.register_blueprint(drop_box_service)
-
-# Generic catch-all
-application.register_error_handler(Exception, quart_error_wrap_with_traceback(quart_internal_server_error,
-                                                                              service_name=SERVICE_NAME))
-application.register_error_handler(BadRequest, quart_error_wrap(quart_bad_request_error))
-application.register_error_handler(NotFound, quart_error_wrap(quart_not_found_error))
-
-application.teardown_appcontext(close_backend)
+application.exception_handler(StarletteHTTPException)(http_exception_handler_factory(get_logger(get_config())))
+application.exception_handler(RequestValidationError)(validation_exception_handler)

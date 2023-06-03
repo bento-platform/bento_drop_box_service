@@ -1,33 +1,34 @@
 import boto3
 import logging
-from typing import Tuple
 
 from botocore.exceptions import ClientError
-from bento_lib.responses.quart_errors import quart_internal_server_error, quart_not_found_error
-from quart import current_app
+from fastapi import status
+from fastapi.exceptions import HTTPException
+from typing import Tuple
 from werkzeug import Request, Response
 
 from .base import DropBoxBackend
+from ..config import Config
 from ..minio import S3Tree
 
 
 class MinioBackend(DropBoxBackend):
-    def __init__(self, logger: logging.Logger, resource=None):
-        super(MinioBackend, self).__init__(logger)
+    def __init__(self, config: Config, logger: logging.Logger, resource=None):
+        super().__init__(config, logger)
 
         if resource:
             self.minio = resource
-        elif current_app.config["MINIO_RESOURCE"]:
-            self.minio = current_app.config["MINIO_RESOURCE"]
+        elif config.minio_resource:
+            self.minio = config.minio_resource
         else:
             self.minio = boto3.resource(
                 "s3",
-                endpoint_url=current_app.config["MINIO_URL"],
-                aws_access_key_id=current_app.config["MINIO_USERNAME"],
-                aws_secret_access_key=current_app.config["MINIO_PASSWORD"]
+                endpoint_url=config.minio_url,
+                aws_access_key_id=config.minio_username,
+                aws_secret_access_key=config.minio_password,
             )
 
-        self.bucket = self.minio.Bucket(current_app.config["MINIO_BUCKET"])
+        self.bucket = self.minio.Bucket(config.minio_bucket)
 
     async def get_directory_tree(self) -> Tuple[dict, ...]:
         tree = S3Tree()
@@ -39,14 +40,15 @@ class MinioBackend(DropBoxBackend):
 
     async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:
         # TODO: Implement
-        return quart_internal_server_error("Uploading to minio not implemented")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Uploading to minio not implemented")
 
     async def retrieve_from_path(self, path: str):
         try:
             obj = self.bucket.Object(path)
             content = obj.get()
         except ClientError:
-            return quart_not_found_error("Nothing found at specified path")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nothing found at specified path")
 
         filename = path.split('/')[-1]
 

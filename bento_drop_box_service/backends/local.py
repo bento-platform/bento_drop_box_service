@@ -6,8 +6,8 @@ import aiofiles.ospath
 import os
 import pathlib
 
-from bento_lib.responses.quart_errors import quart_bad_request_error, quart_not_found_error
 from fastapi import status
+from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
 from fastapi.responses import FileResponse
 from starlette.responses import Response
@@ -78,12 +78,13 @@ class LocalBackend(DropBoxBackend):
 
         # TODO: This might not be secure (ok for now due to permissions check)
         upload_path = os.path.realpath(os.path.join(sd, os.path.dirname(path), secure_filename(os.path.basename(path))))
-        if not os.path.realpath(os.path.join(sd, path)).startswith(os.path.realpath(sd)):
+        if not (rp := os.path.realpath(os.path.join(sd, path))).startswith(os.path.realpath(sd)):
             # TODO: Mark against user
-            return quart_bad_request_error("Cannot upload outside of the drop box")
+            self.logger.warning(f"attempted upload to path outside of drop box: {rp}")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot upload outside of the drop box")
 
         if os.path.exists(upload_path):
-            return quart_bad_request_error("Cannot upload to an existing path")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot upload to an existing path")
 
         try:
             os.makedirs(os.path.dirname(upload_path), exist_ok=True)
@@ -111,22 +112,24 @@ class LocalBackend(DropBoxBackend):
             path_parts = path_parts[1:]
 
             if part not in {item["name"] for item in directory_items}:
-                return quart_not_found_error("Nothing found at specified path")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nothing found at specified path")
 
             try:
                 node = next(item for item in directory_items if item["name"] == part)
 
                 if not path_parts:  # End of the path
                     if "contents" in node:
-                        return quart_bad_request_error("Cannot retrieve a directory")
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot retrieve a directory")
 
                     return FileResponse(node["filePath"], media_type="application/octet-stream", filename=node["name"])
 
                 if "contents" not in node:
-                    return quart_bad_request_error(f"{node['name']} is not a directory")
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST, detail=f"{node['name']} is not a directory")
 
                 directory_items = node["contents"]
                 # Go around another iteration, nesting into this directory
 
             except StopIteration:
-                return quart_not_found_error("Nothing found at specified path")
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nothing found at specified path")

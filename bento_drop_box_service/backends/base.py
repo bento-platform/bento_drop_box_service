@@ -32,6 +32,3 @@ class DropBoxBackend(ABC):
     @abstractmethod
     async def retrieve_from_path(self, path: str) -> Response:
         pass
-
-    async def close(self):
-        pass
