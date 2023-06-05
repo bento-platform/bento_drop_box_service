@@ -9,4 +9,8 @@ config = get_config()
 
 
 # Non-standard middleware setup so that we can import the instance and use it for dependencies too
-authz_middleware = FastApiAuthMiddleware(config.bento_authz_service_url, config.openid_config_url)
+authz_middleware = FastApiAuthMiddleware(
+    config.bento_authz_service_url,
+    config.openid_config_url,
+    debug_mode=config.bento_debug,
+)
