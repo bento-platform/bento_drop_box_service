@@ -7,7 +7,6 @@ from ..logger import LoggerDependency
 
 from .base import DropBoxBackend
 from .local import LocalBackend
-from .minio import MinioBackend
 
 
 __all__ = [
@@ -18,7 +17,7 @@ __all__ = [
 
 @lru_cache()
 def get_backend(config: ConfigDependency, logger: LoggerDependency) -> DropBoxBackend:
-    return LocalBackend(config, logger) if config.service_data_source == "local" else MinioBackend(config, logger)
+    return LocalBackend(config, logger)
 
 
 BackendDependency = Annotated[DropBoxBackend, Depends(get_backend)]

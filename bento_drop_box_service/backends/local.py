@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import aiofiles
 import aiofiles.os
 import aiofiles.ospath
@@ -11,22 +9,9 @@ from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
 from fastapi.responses import FileResponse
 from starlette.responses import Response
-from typing import TypedDict
 from werkzeug.utils import secure_filename
 
-from .base import DropBoxBackend
-
-
-# TODO: py3.11: individual optional fields
-class DropBoxEntry(TypedDict, total=False):
-    name: str
-    filePath: str
-    relativePath: str
-    uri: str
-    size: int
-    lastModified: float
-    lastMetadataChange: float
-    contents: tuple[DropBoxEntry, ...]
+from .base import DropBoxEntry, DropBoxBackend
 
 
 class LocalBackend(DropBoxBackend):

@@ -7,16 +7,6 @@ def validate_tree(res):
     assert 'contents' in tree[1]
 
 
-# def test_tree_minio(client_minio):
-#     res = client_minio.get("/tree")
-#     validate_tree(res)
-#
-#
-# def test_object_download_minio(client_minio):
-#     res = client_minio.get("/objects/patate.txt")
-#     assert res.status_code == 200
-
-
 def test_service_info(client_local):
     res = client_local.get("/service-info")
     data = res.json()

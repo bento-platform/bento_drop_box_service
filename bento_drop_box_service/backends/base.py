@@ -1,11 +1,24 @@
 import logging
 from abc import ABC, abstractmethod
-from werkzeug import Request, Response
+from fastapi import Request, Response
+from typing import TypedDict
 
 from ..config import Config
 
 
-__all__ = ["DropBoxBackend"]
+__all__ = ["DropBoxEntry", "DropBoxBackend"]
+
+
+# TODO: py3.11: individual optional fields
+class DropBoxEntry(TypedDict, total=False):
+    name: str
+    filePath: str
+    relativePath: str
+    uri: str
+    size: int
+    lastModified: float
+    lastMetadataChange: float
+    contents: tuple["DropBoxEntry", ...]
 
 
 class DropBoxBackend(ABC):
@@ -22,7 +35,7 @@ class DropBoxBackend(ABC):
         return self._logger
 
     @abstractmethod
-    async def get_directory_tree(self) -> tuple[dict, ...]:
+    async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:
         pass
 
     @abstractmethod
