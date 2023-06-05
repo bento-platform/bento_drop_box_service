@@ -212,7 +212,7 @@ quart = ["quart (>=0.18.4,<0.19)"]
 type = "git"
 url = "https://github.com/bento-platform/bento_lib.git"
 reference = "more-auth-middleware-work"
-resolved_reference = "9fbb848db9f4951e25a28eebe08f9bdf0e739ffa"
+resolved_reference = "794cfa69d5e5027a7197198c95515a3831e68679"
 
 [[package]]
 name = "cachetools"

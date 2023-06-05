@@ -13,4 +13,5 @@ authz_middleware = FastApiAuthMiddleware(
     config.bento_authz_service_url,
     config.openid_config_url,
     debug_mode=config.bento_debug,
+    enabled=config.authz_enabled,
 )
