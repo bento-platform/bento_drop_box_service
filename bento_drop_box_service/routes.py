@@ -8,6 +8,7 @@ from starlette.responses import Response
 from bento_lib.types import GA4GHServiceInfo, BentoExtraServiceInfo
 
 from . import __version__
+from .app import authz_middleware
 from .backends.dependency import BackendDependency
 from .constants import BENTO_SERVICE_KIND, SERVICE_NAME, SERVICE_TYPE
 from .config import ConfigDependency
@@ -16,13 +17,16 @@ from .logger import LoggerDependency
 
 drop_box_router = APIRouter()
 
+authz_view_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"view:drop-box"}))
+authz_edit_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"edit:drop-box"}))
 
-@drop_box_router.get("/tree", dependencies=[])  # TODO: dependencies: permissions
-async def drop_box_tree(backend: BackendDependency) -> Response:  # TODO: Dependencies: config, backend
+
+@drop_box_router.get("/tree", dependencies=(authz_view_dependency,))
+async def drop_box_tree(backend: BackendDependency) -> Response:
     return JSONResponse(await backend.get_directory_tree())
 
 
-@drop_box_router.get("/objects/{path:path}")  # TODO: dependencies
+@drop_box_router.get("/objects/{path:path}", dependencies=(authz_view_dependency,))
 async def drop_box_retrieve(path: str, backend: BackendDependency):
     # Werkzeug's default is to encode URL to latin1
     # in case we have unicode characters in the filename
@@ -34,7 +38,7 @@ async def drop_box_retrieve(path: str, backend: BackendDependency):
     return await backend.retrieve_from_path(path)
 
 
-@drop_box_router.put("/objects/{path:path}")  # TODO: dependencies
+@drop_box_router.put("/objects/{path:path}", dependencies=(authz_edit_dependency,))
 async def drop_box_upload(request: Request, path: str, backend: BackendDependency):
     # Werkzeug's default is to encode URL to latin1
     # in case we have unicode characters in the filename
@@ -57,7 +61,7 @@ async def _git_stdout(*args) -> str:
     return res.decode().rstrip()
 
 
-@drop_box_router.get("/service-info")  # TODO: dependencies
+@drop_box_router.get("/service-info", dependencies=[authz_middleware.dep_public_endpoint()])
 async def service_info(config: ConfigDependency, logger: LoggerDependency) -> Response:
     # Spec: https://github.com/ga4gh-discovery/ga4gh-service-info
 

@@ -19,7 +19,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.10.0"
-bento-lib = {extras = ["fastapi"], version = "^6.1.0"}
+bento-lib = {extras=["fastapi"], git="https://github.com/bento-platform/bento_lib.git", branch="more-auth-middleware-work"}
 aiofiles = "^23.1.0"
 fastapi = "^0.95.2"
 werkzeug = "^2.3.4"
