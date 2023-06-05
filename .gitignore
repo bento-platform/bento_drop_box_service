@@ -8,7 +8,6 @@ __pycache__
 .tox
 
 # IDE stuff
-.idea/workspace.xml
-.idea/dataSources*
+.idea/*
 *.swp
 *.swo
