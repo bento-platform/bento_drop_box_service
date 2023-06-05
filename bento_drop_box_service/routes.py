@@ -17,8 +17,8 @@ from .logger import LoggerDependency
 
 drop_box_router = APIRouter()
 
-authz_view_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"view:drop-box"}))
-authz_edit_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"edit:drop-box"}))
+authz_view_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"view:drop_box"}))
+authz_edit_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"edit:drop_box"}))
 
 
 @drop_box_router.get("/tree", dependencies=(authz_view_dependency,))
