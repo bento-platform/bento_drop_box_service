@@ -8,7 +8,7 @@ from starlette.responses import Response
 from bento_lib.types import GA4GHServiceInfo, BentoExtraServiceInfo
 
 from . import __version__
-from .app import authz_middleware
+from .authz import authz_middleware
 from .backends.dependency import BackendDependency
 from .constants import BENTO_SERVICE_KIND, SERVICE_NAME, SERVICE_TYPE
 from .config import ConfigDependency
