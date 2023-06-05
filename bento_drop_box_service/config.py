@@ -25,10 +25,6 @@ class Config(BaseSettings):
 
     # Bento authorization service base URL
     bento_authz_service_url: str
-    # OpenID well-known URL of the instance Identity Provider to extract endpoints from
-    #  - Schemas in this service are written ready for multi-IdP/federation support; however, for now, only
-    #    the instance-local IdP is supported.
-    openid_config_url: str
 
     cors_origins: tuple[str, ...] = ()
 
