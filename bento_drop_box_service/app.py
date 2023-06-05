@@ -12,7 +12,14 @@ from .routes import drop_box_router
 application = FastAPI()
 application.include_router(drop_box_router)
 
-application.add_middleware(CORSMiddleware)
+config_for_setup = get_config()
 
-application.exception_handler(StarletteHTTPException)(http_exception_handler_factory(get_logger(get_config())))
+application.add_middleware(
+    CORSMiddleware,
+    allow_origins=config_for_setup.cors_origins,
+    allow_headers=["Authorization"],
+    allow_credentials=True,
+)
+
+application.exception_handler(StarletteHTTPException)(http_exception_handler_factory(get_logger(config_for_setup)))
 application.exception_handler(RequestValidationError)(validation_exception_handler)
