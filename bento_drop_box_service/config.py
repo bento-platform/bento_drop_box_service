@@ -14,6 +14,7 @@ __all__ = [
 
 class Config(BaseSettings):
     bento_debug: bool = False
+    authz_enabled: bool = True
 
     service_id: str = str(":".join(list(SERVICE_TYPE.values())[:2]))
     service_data_source: Literal["local"] = "local"
