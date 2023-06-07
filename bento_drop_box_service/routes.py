@@ -18,7 +18,8 @@ from .logger import LoggerDependency
 drop_box_router = APIRouter()
 
 authz_view_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"view:drop_box"}))
-authz_edit_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"edit:drop_box"}))
+authz_ingest_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"ingest:drop_box"}))
+authz_delete_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"delete:drop_box"}))
 
 
 @drop_box_router.get("/tree", dependencies=(authz_view_dependency,))
@@ -38,7 +39,7 @@ async def drop_box_retrieve(path: str, backend: BackendDependency):
     return await backend.retrieve_from_path(path)
 
 
-@drop_box_router.put("/objects/{path:path}", dependencies=(authz_edit_dependency,))
+@drop_box_router.put("/objects/{path:path}", dependencies=(authz_ingest_dependency,))
 async def drop_box_upload(request: Request, path: str, backend: BackendDependency):
     # Werkzeug's default is to encode URL to latin1
     # in case we have unicode characters in the filename
