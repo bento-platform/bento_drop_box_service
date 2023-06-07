@@ -24,6 +24,7 @@ application.add_middleware(
     allow_origins=config_for_setup.cors_origins,
     allow_headers=["Authorization"],
     allow_credentials=True,
+    allow_methods=["*"],
 )
 
 # Non-standard middleware setup so that we can import the instance and use it for dependencies too
