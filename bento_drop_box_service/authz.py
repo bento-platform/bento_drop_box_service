@@ -1,4 +1,4 @@
-from bento_lib.auth.fastapi_middleware import FastApiAuthMiddleware
+from bento_lib.auth.middleware.fastapi import FastApiAuthMiddleware
 from .config import get_config
 
 __all__ = [
