@@ -51,7 +51,11 @@ Poetry is used to manage dependencies.
 To run the service in development mode, use the following command:
 
 ```bash
-QUART_ENV=development QUART_APP=bento_service_registry.app quart run
+poetry run python -m debugpy --listen "0.0.0.0:5678" -m uvicorn \
+  "bento_drop_box_service.app:application" \
+  --host 0.0.0.0 \
+  --port 5000 \
+  --reload
 ```
 
 ### Running tests
@@ -59,7 +63,7 @@ QUART_ENV=development QUART_APP=bento_service_registry.app quart run
 To run tests and linting, run Tox:
 
 ```bash
-tox
+poetry run tox
 ```
 
 
