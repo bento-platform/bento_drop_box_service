@@ -82,13 +82,12 @@ class LocalBackend(DropBoxBackend):
 
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-    async def retrieve_from_path(self, path: str) -> Response:
+    async def get_node_at_path(self, path: str, verb: str = "retrieve") -> DropBoxEntry:
         root_path: pathlib.Path = pathlib.Path(self.config.service_data).absolute()
         directory_items: tuple[DropBoxEntry, ...] = await self.get_directory_tree()
 
         # Manually crawl through the tree to only return items which are explicitly in the tree.
 
-        # Otherwise, find the file if it exists and return it.
         # TODO: Deal with slashes in file names
         path_parts: list[str] = path.removeprefix(str(root_path)).strip("/").split("/")
 
@@ -105,9 +104,9 @@ class LocalBackend(DropBoxBackend):
                 if not path_parts:  # End of the path
                     if "contents" in node:
                         raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot retrieve a directory")
+                            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot {verb} a directory")
 
-                    return FileResponse(node["filePath"], media_type="application/octet-stream", filename=node["name"])
+                    return node
 
                 if "contents" not in node:
                     raise HTTPException(
@@ -118,3 +117,12 @@ class LocalBackend(DropBoxBackend):
 
             except StopIteration:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nothing found at specified path")
+
+    async def retrieve_from_path(self, path: str) -> Response:
+        node = await self.get_node_at_path(path)
+        return FileResponse(node["filePath"], media_type="application/octet-stream", filename=node["name"])
+
+    async def delete_at_path(self, path: str) -> Response:
+        node = await self.get_node_at_path(path, verb="delete")
+        await aiofiles.os.remove(node["filePath"])
+        return Response(status_code=status.HTTP_204_NO_CONTENT)

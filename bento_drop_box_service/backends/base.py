@@ -45,3 +45,7 @@ class DropBoxBackend(ABC):
     @abstractmethod
     async def retrieve_from_path(self, path: str) -> Response:  # pragma: no cover
         pass
+
+    @abstractmethod
+    async def delete_at_path(self, path: str) -> None:  # pragma: no cover
+        pass

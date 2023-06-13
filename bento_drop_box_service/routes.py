@@ -55,6 +55,15 @@ async def drop_box_upload(request: Request, path: str, backend: BackendDependenc
     return await backend.upload_to_path(request, path, content_length)
 
 
+@drop_box_router.delete(
+    "/objects/{path:path}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=(authz_delete_dependency,),
+)
+async def drop_box_delete(path: str, backend: BackendDependency):
+    return await backend.delete_at_path(path)
+
+
 async def _git_stdout(*args) -> str:
     git_proc = await asyncio.create_subprocess_exec(
         "git", *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
