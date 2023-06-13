@@ -35,13 +35,13 @@ class DropBoxBackend(ABC):
         return self._logger
 
     @abstractmethod
-    async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:
+    async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:  # pragma: no cover
         pass
 
     @abstractmethod
-    async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:
+    async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:  # pragma: no cover
         pass
 
     @abstractmethod
-    async def retrieve_from_path(self, path: str) -> Response:
+    async def retrieve_from_path(self, path: str) -> Response:  # pragma: no cover
         pass

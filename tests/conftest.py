@@ -25,8 +25,12 @@ def get_test_local_config():
 
 
 @pytest.fixture()
-def client_local():
-    test_config = get_test_local_config()
+def test_config():
+    yield get_test_local_config()
+
+
+@pytest.fixture()
+def client_local(test_config: Config):
     os.environ["BENTO_DEBUG"] = str(test_config.bento_debug)
     os.environ["AUTHZ_ENABLED"] = str(test_config.authz_enabled)
     os.environ["CORS_ORIGINS"] = "*"
