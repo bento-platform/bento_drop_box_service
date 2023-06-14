@@ -20,10 +20,6 @@ This is used for file URI generation.
 If using the current filesystem to serve file, you can use the `SERVICE_DATA`
 environment variable to point to some location (./data by default).
 
-If the `MINIO_URL` variable is set, the application will try to connect to
-a minIO instance. To do so, you will also need to set `MINIO_USERNAME`,
-`MINIO_PASSWORD` and `MINIO_BUCKET`.
-
 
 
 ## Running in Development
@@ -32,16 +28,11 @@ Poetry is used to manage dependencies.
 
 ### Getting set up
 
-1. Create a virtual environment for the project:
-   ```bash
-   virtualenv -p python3 ./env
-   source env/bin/activate
-   ```
-2. Install `poetry`:
+1. Install `poetry`:
    ```bash
    pip install poetry
    ```
-3. Install project dependencies:
+2. Install project dependencies inside a Poetry-managed virtual environment:
    ```bash
    poetry install
    ```
@@ -67,15 +58,13 @@ poetry run tox
 ```
 
 
+
 ## Deploying
 
 
 The `bento_drop_box_service` service can be deployed with an ASGI server like 
-Hypercorn, specifying `bento_drop_box_service.app:application` as the 
+Uvicorn, specifying `bento_drop_box_service.app:application` as the 
 ASGI application.
 
 It is best to then put an HTTP server software such as NGINX in front of 
 Hypercorn. 
-
-**Quart applications should NEVER be deployed in production via the Quart 
-development server, i.e. `quart run`!**
