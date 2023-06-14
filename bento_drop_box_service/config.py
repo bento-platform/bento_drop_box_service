@@ -14,7 +14,6 @@ __all__ = [
 
 class Config(BaseSettings):
     bento_debug: bool = False
-    authz_enabled: bool = True
 
     service_id: str = str(":".join(list(SERVICE_TYPE.values())[:2]))
     service_data_source: Literal["local"] = "local"
@@ -23,8 +22,8 @@ class Config(BaseSettings):
 
     traversal_limit: int = 16
 
-    # Bento authorization service base URL
-    bento_authz_service_url: str
+    bento_authz_service_url: str  # Bento authorization service base URL
+    authz_enabled: bool = True
 
     cors_origins: tuple[str, ...] = ()
 

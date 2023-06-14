@@ -5,6 +5,7 @@ __all__ = [
     "authz_middleware",
 ]
 
+# TODO: Find a way to DI this
 config = get_config()
 
 

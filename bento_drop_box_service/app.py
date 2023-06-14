@@ -1,4 +1,4 @@
-from bento_lib.responses.fastapi_errors import http_exception_handler_factory, validation_exception_handler
+from bento_lib.responses.fastapi_errors import http_exception_handler_factory, validation_exception_handler_factory
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,6 +17,7 @@ __all__ = [
 application = FastAPI()
 application.include_router(drop_box_router)
 
+# TODO: Find a way to DI this
 config_for_setup = get_config()
 
 application.add_middleware(
@@ -30,5 +31,6 @@ application.add_middleware(
 # Non-standard middleware setup so that we can import the instance and use it for dependencies too
 authz_middleware.attach(application)
 
-application.exception_handler(StarletteHTTPException)(http_exception_handler_factory(get_logger(config_for_setup)))
-application.exception_handler(RequestValidationError)(validation_exception_handler)
+application.exception_handler(StarletteHTTPException)(
+    http_exception_handler_factory(get_logger(config_for_setup), authz_middleware))
+application.exception_handler(RequestValidationError)(validation_exception_handler_factory(authz_middleware))
