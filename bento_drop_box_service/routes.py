@@ -3,8 +3,10 @@ import asyncio
 from fastapi import APIRouter, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from starlette.responses import Response
 
+from bento_lib.auth.middleware.constants import RESOURCE_EVERYTHING
 from bento_lib.types import GA4GHServiceInfo, BentoExtraServiceInfo
 
 from . import __version__
@@ -17,7 +19,9 @@ from .logger import LoggerDependency
 
 drop_box_router = APIRouter()
 
-authz_view_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"view:drop_box"}))
+VIEW_PERMISSION_SET = frozenset({"view:drop_box"})
+
+authz_view_dependency = authz_middleware.dep_require_permissions_on_resource(VIEW_PERMISSION_SET)
 authz_ingest_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"ingest:drop_box"}))
 authz_delete_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"delete:drop_box"}))
 
@@ -35,6 +39,31 @@ async def drop_box_retrieve(path: str, backend: BackendDependency):
         path = path.encode('iso-8859-1').decode('utf8')
     except UnicodeDecodeError:
         pass
+
+    return await backend.retrieve_from_path(path)
+
+
+class TokenBody(BaseModel):
+    token: str
+
+
+@drop_box_router.post("/objects/{path:path}")
+async def drop_box_retrieve_post(request: Request, path: str, body: TokenBody, backend: BackendDependency):
+    # Werkzeug's default is to encode URL to latin1
+    # in case we have unicode characters in the filename
+    try:
+        path = path.encode('iso-8859-1').decode('utf8')
+    except UnicodeDecodeError:
+        pass
+
+    # Check the token we received in the POST body against the authorization service
+    authz_middleware.async_check_authz_evaluate(
+        request,
+        VIEW_PERMISSION_SET,
+        RESOURCE_EVERYTHING,
+        set_authz_flag=True,
+        headers_getter=(lambda _r: body.token),
+    )
 
     return await backend.retrieve_from_path(path)
 
