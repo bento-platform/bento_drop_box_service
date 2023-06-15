@@ -1,34 +1,41 @@
-import boto3
-import pytest_asyncio
+import os
 import pathlib
-from moto import mock_s3
+import pytest
+
+from fastapi.testclient import TestClient
+from functools import lru_cache
+
+from bento_drop_box_service.config import Config, get_config
 
 
 local_dir = str(pathlib.Path(__file__).parent / "test_data")
 bucket_name = "test"
 
 
-@pytest_asyncio.fixture()
-async def client_minio():
+@lru_cache
+def get_test_local_config():
+    return Config(
+        bento_debug=True,
+        authz_enabled=False,
+        cors_origins=("*",),
+        service_data_source="local",
+        service_data=local_dir,
+        bento_authz_service_url="https://skip",
+    )
+
+
+@pytest.fixture()
+def test_config():
+    yield get_test_local_config()
+
+
+@pytest.fixture()
+def client_local(test_config: Config):
+    os.environ["BENTO_DEBUG"] = str(test_config.bento_debug)
+    os.environ["AUTHZ_ENABLED"] = str(test_config.authz_enabled)
+    os.environ["CORS_ORIGINS"] = "*"
+    os.environ["BENTO_AUTHZ_SERVICE_URL"] = test_config.bento_authz_service_url
+
     from bento_drop_box_service.app import application
-
-    with mock_s3():
-        s3 = boto3.resource('s3')
-        s3.create_bucket(Bucket=bucket_name)
-
-        s3.Object(bucket_name, 'patate.txt').put()
-        s3.Object(bucket_name, 'some_dir/patate.txt').put()
-        s3.Object(bucket_name, 'some_dir/some_other_dir/patate.txt').put()
-
-        application.config["MINIO_RESOURCE"] = s3
-        application.config["MINIO_BUCKET"] = bucket_name
-        application.config["SERVICE_DATA_SOURCE"] = "minio"
-        yield application.test_client()
-
-
-@pytest_asyncio.fixture()
-async def client_local():
-    from bento_drop_box_service.app import application
-    application.config["SERVICE_DATA_SOURCE"] = "local"
-    application.config["SERVICE_DATA"] = local_dir
-    yield application.test_client()
+    application.dependency_overrides[get_config] = get_test_local_config
+    yield TestClient(application)

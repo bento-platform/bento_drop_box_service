@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.8", "3.10" ]
+        python-version: [ "3.10", "3.11" ]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -21,6 +21,6 @@ jobs:
       - name: Install dependencies
         run: poetry install
       - name: Test
-        run: pytest -svv --cov=bento_drop_box_service --cov-branch
+        run: poetry run pytest -svv --cov=bento_drop_box_service --cov-branch
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
