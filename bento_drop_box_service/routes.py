@@ -1,10 +1,11 @@
 import asyncio
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, Form, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.responses import Response
+from typing import Annotated
 
 from bento_lib.auth.middleware.constants import RESOURCE_EVERYTHING
 from bento_lib.types import GA4GHServiceInfo, BentoExtraServiceInfo
@@ -33,13 +34,6 @@ async def drop_box_tree(backend: BackendDependency) -> Response:
 
 @drop_box_router.get("/objects/{path:path}", dependencies=(authz_view_dependency,))
 async def drop_box_retrieve(path: str, backend: BackendDependency):
-    # Werkzeug's default is to encode URL to latin1
-    # in case we have unicode characters in the filename
-    try:
-        path = path.encode('iso-8859-1').decode('utf8')
-    except UnicodeDecodeError:
-        pass
-
     return await backend.retrieve_from_path(path)
 
 
@@ -48,21 +42,19 @@ class TokenBody(BaseModel):
 
 
 @drop_box_router.post("/objects/{path:path}")
-async def drop_box_retrieve_post(request: Request, path: str, body: TokenBody, backend: BackendDependency):
-    # Werkzeug's default is to encode URL to latin1
-    # in case we have unicode characters in the filename
-    try:
-        path = path.encode('iso-8859-1').decode('utf8')
-    except UnicodeDecodeError:
-        pass
-
+async def drop_box_retrieve_post(
+    request: Request,
+    path: str,
+    token: Annotated[str, Form()],
+    backend: BackendDependency,
+):
     # Check the token we received in the POST body against the authorization service
-    authz_middleware.async_check_authz_evaluate(
+    await authz_middleware.async_check_authz_evaluate(
         request,
         VIEW_PERMISSION_SET,
         RESOURCE_EVERYTHING,
         set_authz_flag=True,
-        headers_getter=(lambda _r: body.token),
+        headers_getter=(lambda _r: {"Authorization": f"Bearer {token}"}),
     )
 
     return await backend.retrieve_from_path(path)
@@ -70,13 +62,6 @@ async def drop_box_retrieve_post(request: Request, path: str, body: TokenBody, b
 
 @drop_box_router.put("/objects/{path:path}", dependencies=(authz_ingest_dependency,))
 async def drop_box_upload(request: Request, path: str, backend: BackendDependency):
-    # Werkzeug's default is to encode URL to latin1
-    # in case we have unicode characters in the filename
-    try:
-        path = path.encode('iso-8859-1').decode('utf8')
-    except UnicodeDecodeError:
-        pass
-
     content_length = int(request.headers.get("Content-Length", "0"))
     if content_length == 0:
         raise HTTPException(

@@ -23,6 +23,7 @@ bento-lib = {version = "7.0.0a4", extras = ["fastapi"]}
 aiofiles = "^23.1.0"
 fastapi = "^0.95.2"
 werkzeug = "^2.3.4"
+python-multipart = "^0.0.6"
 
 [tool.poetry.group.dev.dependencies]
 tox = "^4.4.5"

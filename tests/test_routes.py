@@ -28,10 +28,10 @@ def test_object_download_local(client_local):
     res = client_local.get("/objects/some_dir/some_other_dir/patate.txt")
     assert res.status_code == 200
 
-    res = client_local.post("/objects/patate.txt", json={"token": "test"})
+    res = client_local.post("/objects/patate.txt", data={"token": "test"})
     assert res.status_code == 200
 
-    res = client_local.post("/objects/some_dir/some_other_dir/patate.txt", json={"token": "test"})
+    res = client_local.post("/objects/some_dir/some_other_dir/patate.txt", data={"token": "test"})
     assert res.status_code == 200
 
 
