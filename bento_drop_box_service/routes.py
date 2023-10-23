@@ -1,5 +1,6 @@
 import asyncio
 
+from bento_lib.auth.permissions import P_VIEW_DROP_BOX, P_INGEST_DROP_BOX, P_DELETE_DROP_BOX
 from fastapi import APIRouter, Form, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
@@ -20,11 +21,11 @@ from .logger import LoggerDependency
 
 drop_box_router = APIRouter()
 
-VIEW_PERMISSION_SET = frozenset({"view:drop_box"})
+VIEW_PERMISSION_SET = frozenset({P_VIEW_DROP_BOX})
 
 authz_view_dependency = authz_middleware.dep_require_permissions_on_resource(VIEW_PERMISSION_SET)
-authz_ingest_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"ingest:drop_box"}))
-authz_delete_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({"delete:drop_box"}))
+authz_ingest_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({P_INGEST_DROP_BOX}))
+authz_delete_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({P_DELETE_DROP_BOX}))
 
 
 @drop_box_router.get("/tree", dependencies=(authz_view_dependency,))
