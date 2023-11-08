@@ -24,6 +24,7 @@ aiofiles = "^23.1.0"
 fastapi = "^0.104.0"
 werkzeug = "^2.3.4"
 python-multipart = "^0.0.6"
+pydantic-settings = "^2.0.3"
 
 [tool.poetry.group.dev.dependencies]
 tox = "^4.11.3"
