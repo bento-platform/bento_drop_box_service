@@ -14,14 +14,12 @@ bucket_name = "test"
 
 @lru_cache
 def get_test_local_config():
-    return Config(
-        bento_debug=True,
-        authz_enabled=False,
-        cors_origins=("*",),
-        service_data_source="local",
-        service_data=local_dir,
-        bento_authz_service_url="https://skip",
-    )
+    os.environ["BENTO_DEBUG"] = "True"
+    os.environ["AUTHZ_ENABLED"] = "False"
+    os.environ["CORS_ORIGINS"] = "*"
+    os.environ["SERVICE_DATA"] = local_dir
+    os.environ["BENTO_AUTHZ_SERVICE_URL"] = "https://skip"
+    return Config()
 
 
 @pytest.fixture()
@@ -31,11 +29,6 @@ def test_config():
 
 @pytest.fixture()
 def client_local(test_config: Config):
-    os.environ["BENTO_DEBUG"] = str(test_config.bento_debug)
-    os.environ["AUTHZ_ENABLED"] = str(test_config.authz_enabled)
-    os.environ["CORS_ORIGINS"] = "*"
-    os.environ["BENTO_AUTHZ_SERVICE_URL"] = test_config.bento_authz_service_url
-
     from bento_drop_box_service.app import application
     application.dependency_overrides[get_config] = get_test_local_config
     yield TestClient(application)
