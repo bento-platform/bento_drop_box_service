@@ -22,7 +22,7 @@ python = "^3.10.0"
 bento-lib = {version = "^9.1.0", extras = ["fastapi"]}
 aiofiles = "^23.1.0"
 fastapi = "^0.104.0"
-werkzeug = "^2.3.4"
+werkzeug = "^3.0.1"
 python-multipart = "^0.0.6"
 pydantic-settings = "^2.0.3"
 
