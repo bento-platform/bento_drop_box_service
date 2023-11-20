@@ -1,15 +1,11 @@
-import asyncio
-
 from bento_lib.auth.permissions import P_VIEW_DROP_BOX, P_INGEST_DROP_BOX, P_DELETE_DROP_BOX
+from bento_lib.auth.resources import RESOURCE_EVERYTHING
+from bento_lib.service_info import SERVICE_ORGANIZATION_C3G, build_service_info
 from fastapi import APIRouter, Form, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 from starlette.responses import Response
 from typing import Annotated
-
-from bento_lib.auth.middleware.constants import RESOURCE_EVERYTHING
-from bento_lib.types import GA4GHServiceInfo, BentoExtraServiceInfo
 
 from . import __version__
 from .authz import authz_middleware
@@ -36,10 +32,6 @@ async def drop_box_tree(backend: BackendDependency) -> Response:
 @drop_box_router.get("/objects/{path:path}", dependencies=(authz_view_dependency,))
 async def drop_box_retrieve(path: str, backend: BackendDependency):
     return await backend.retrieve_from_path(path)
-
-
-class TokenBody(BaseModel):
-    token: str
 
 
 @drop_box_router.post("/objects/{path:path}")
@@ -79,51 +71,18 @@ async def drop_box_delete(path: str, backend: BackendDependency):
     return await backend.delete_at_path(path)
 
 
-async def _git_stdout(*args) -> str:
-    git_proc = await asyncio.create_subprocess_exec(
-        "git", *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-    res, _ = await git_proc.communicate()
-    return res.decode().rstrip()
-
-
 @drop_box_router.get("/service-info", dependencies=[authz_middleware.dep_public_endpoint()])
 async def service_info(config: ConfigDependency, logger: LoggerDependency) -> Response:
     # Spec: https://github.com/ga4gh-discovery/ga4gh-service-info
-
-    bento_info: BentoExtraServiceInfo = {
-        "serviceKind": BENTO_SERVICE_KIND
-    }
-
-    debug_mode = config.bento_debug
-    if debug_mode:
-        try:
-            if res_tag := await _git_stdout("describe", "--tags", "--abbrev=0"):
-                # noinspection PyTypeChecker
-                bento_info["gitTag"] = res_tag
-            if res_branch := await _git_stdout("branch", "--show-current"):
-                # noinspection PyTypeChecker
-                bento_info["gitBranch"] = res_branch
-            if res_commit := await _git_stdout("rev-parse", "HEAD"):
-                # noinspection PyTypeChecker
-                bento_info["gitCommit"] = res_commit
-
-        except Exception as e:
-            logger.error(f"Error retrieving git information: {type(e).__name__}")
-
-    # Do a little type checking
-    info: GA4GHServiceInfo = {
+    return JSONResponse(await build_service_info({
         "id": config.service_id,
         "name": SERVICE_NAME,
         "type": SERVICE_TYPE,
         "description": "Drop box service for a Bento platform node.",
-        "organization": {
-            "name": "C3G",
-            "url": "https://www.computationalgenomics.ca"
-        },
+        "organization": SERVICE_ORGANIZATION_C3G,
         "contactUrl": "mailto:info@c3g.ca",
         "version": __version__,
-        "environment": "dev" if debug_mode else "prod",
-        "bento": bento_info,
-    }
-
-    return JSONResponse(info)
+        "bento": {
+            "serviceKind": BENTO_SERVICE_KIND
+        },
+    }, debug=config.bento_debug, local=config.bento_container_local, logger=logger))
