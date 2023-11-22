@@ -29,10 +29,12 @@ class Config(BaseSettings):
 
     service_id: str = str(":".join(list(SERVICE_TYPE.values())[:2]))
     service_name: str = "Bento Drop Box Service"
-    service_data_source: Literal["local"] = "local"
-    service_data: str = "data/"
+    service_description: str = "Drop box service for a Bento platform node."
+    service_contact_url: str = "mailto:info@c3g.ca"
     service_url: str = "http://127.0.0.1:5000"  # base URL to construct object URIs from
 
+    service_data: str = "data/"
+    service_data_source: Literal["local"] = "local"
     traversal_limit: int = 16
 
     bento_authz_service_url: str  # Bento authorization service base URL

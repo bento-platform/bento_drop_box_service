@@ -78,9 +78,9 @@ async def service_info(config: ConfigDependency, logger: LoggerDependency) -> Re
         "id": config.service_id,
         "name": config.service_name,
         "type": SERVICE_TYPE,
-        "description": "Drop box service for a Bento platform node.",
+        "description": config.service_description,
         "organization": SERVICE_ORGANIZATION_C3G,
-        "contactUrl": "mailto:info@c3g.ca",
+        "contactUrl": config.service_contact_url,
         "version": __version__,
         "bento": {
             "serviceKind": BENTO_SERVICE_KIND
