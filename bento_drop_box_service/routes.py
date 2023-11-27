@@ -10,7 +10,7 @@ from typing import Annotated
 from . import __version__
 from .authz import authz_middleware
 from .backends.dependency import BackendDependency
-from .constants import BENTO_SERVICE_KIND, SERVICE_NAME, SERVICE_TYPE
+from .constants import BENTO_SERVICE_KIND, SERVICE_TYPE
 from .config import ConfigDependency
 from .logger import LoggerDependency
 
@@ -76,11 +76,11 @@ async def service_info(config: ConfigDependency, logger: LoggerDependency) -> Re
     # Spec: https://github.com/ga4gh-discovery/ga4gh-service-info
     return JSONResponse(await build_service_info({
         "id": config.service_id,
-        "name": SERVICE_NAME,
+        "name": config.service_name,
         "type": SERVICE_TYPE,
-        "description": "Drop box service for a Bento platform node.",
+        "description": config.service_description,
         "organization": SERVICE_ORGANIZATION_C3G,
-        "contactUrl": "mailto:info@c3g.ca",
+        "contactUrl": config.service_contact_url,
         "version": __version__,
         "bento": {
             "serviceKind": BENTO_SERVICE_KIND

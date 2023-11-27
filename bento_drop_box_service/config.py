@@ -1,5 +1,6 @@
 import json
 
+from bento_lib.logging import LogLevelLiteral
 from fastapi import Depends
 from functools import lru_cache
 from pydantic.fields import FieldInfo
@@ -27,10 +28,13 @@ class Config(BaseSettings):
     bento_container_local: bool = False
 
     service_id: str = str(":".join(list(SERVICE_TYPE.values())[:2]))
-    service_data_source: Literal["local"] = "local"
-    service_data: str = "data/"
+    service_name: str = "Bento Drop Box Service"
+    service_description: str = "Drop box service for a Bento platform node."
+    service_contact_url: str = "mailto:info@c3g.ca"
     service_url: str = "http://127.0.0.1:5000"  # base URL to construct object URIs from
 
+    service_data: str = "data/"
+    service_data_source: Literal["local"] = "local"
     traversal_limit: int = 16
 
     bento_authz_service_url: str  # Bento authorization service base URL
@@ -38,7 +42,7 @@ class Config(BaseSettings):
 
     cors_origins: tuple[str, ...]
 
-    log_level: Literal["debug", "info", "warning", "error"] = "debug"
+    log_level: LogLevelLiteral = "debug"
 
     # Make Config instances hashable + immutable
     model_config = SettingsConfigDict(frozen=True)
