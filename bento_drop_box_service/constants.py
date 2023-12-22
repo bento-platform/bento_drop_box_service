@@ -1,4 +1,4 @@
-from bento_lib.service_info import GA4GHServiceType
+from bento_lib.service_info.types import GA4GHServiceType
 from bento_drop_box_service import __version__
 
 __all__ = [

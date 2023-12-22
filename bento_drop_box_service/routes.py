@@ -1,6 +1,6 @@
 from bento_lib.auth.permissions import P_VIEW_DROP_BOX, P_INGEST_DROP_BOX, P_DELETE_DROP_BOX
 from bento_lib.auth.resources import RESOURCE_EVERYTHING
-from bento_lib.service_info import SERVICE_ORGANIZATION_C3G, build_service_info
+from bento_lib.service_info.helpers import build_service_info_from_pydantic_config
 from fastapi import APIRouter, Form, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
@@ -74,15 +74,13 @@ async def drop_box_delete(path: str, backend: BackendDependency):
 @drop_box_router.get("/service-info", dependencies=[authz_middleware.dep_public_endpoint()])
 async def service_info(config: ConfigDependency, logger: LoggerDependency) -> Response:
     # Spec: https://github.com/ga4gh-discovery/ga4gh-service-info
-    return JSONResponse(await build_service_info({
-        "id": config.service_id,
-        "name": config.service_name,
-        "type": SERVICE_TYPE,
-        "description": config.service_description,
-        "organization": SERVICE_ORGANIZATION_C3G,
-        "contactUrl": config.service_contact_url,
-        "version": __version__,
-        "bento": {
-            "serviceKind": BENTO_SERVICE_KIND
+    return JSONResponse(await build_service_info_from_pydantic_config(
+        config,
+        logger,
+        {
+            "serviceKind": BENTO_SERVICE_KIND,
+            "gitRepository": "https://github.com/bento-platform/bento_drop_box_service",
         },
-    }, debug=config.bento_debug, local=config.bento_container_local, logger=logger))
+        SERVICE_TYPE,
+        __version__,
+    ))
