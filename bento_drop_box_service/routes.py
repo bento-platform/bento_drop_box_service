@@ -1,6 +1,7 @@
 from bento_lib.auth.permissions import P_VIEW_DROP_BOX, P_INGEST_DROP_BOX, P_DELETE_DROP_BOX
 from bento_lib.auth.resources import RESOURCE_EVERYTHING
-from bento_lib.service_info import SERVICE_ORGANIZATION_C3G, build_service_info
+from bento_lib.service_info.constants import SERVICE_ORGANIZATION_C3G
+from bento_lib.service_info.helpers import build_service_info
 from fastapi import APIRouter, Form, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
