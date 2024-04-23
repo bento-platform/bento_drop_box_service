@@ -1,6 +1,6 @@
-FROM ghcr.io/bento-platform/bento_base_image:python-debian-2024.02.01
+FROM ghcr.io/bento-platform/bento_base_image:python-debian-2024.04.01
 
-RUN pip install --no-cache-dir poetry==1.7.1 "uvicorn[standard]==0.27.1"
+RUN pip install --no-cache-dir poetry==1.8.2 "uvicorn[standard]==0.29.0"
 
 # Backwards-compatible with old BentoV2 container layout
 WORKDIR /drop-box
