@@ -19,18 +19,18 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.10.0"
-bento-lib = {extras = ["fastapi"], version = "^11.6.0"}
+bento-lib = {extras = ["fastapi"], version = "^11.10.0"}
 aiofiles = "^23.2.1"
-fastapi = "^0.110.2"
+fastapi = "^0.111.0"
 werkzeug = "^3.0.3"
 python-multipart = "^0.0.9"
 pydantic-settings = "^2.2.1"
 
 [tool.poetry.group.dev.dependencies]
-tox = "^4.14.2"
-coverage = "^7.4.1"
+tox = "^4.15.0"
+coverage = "^7.5.2"
 pytest = "^7.4.4"
-pytest-cov = "^4.0.0"
+pytest-cov = "^4.1.0"
 flake8 = "^7.0.0"
 pytest-asyncio = "^0.23.6"
 debugpy = "^1.8.1"
