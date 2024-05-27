@@ -15,7 +15,7 @@ bucket_name = "test"
 @lru_cache
 def get_test_local_config():
     os.environ["BENTO_DEBUG"] = "True"
-    os.environ["AUTHZ_ENABLED"] = "False"
+    os.environ["BENTO_AUTHZ_ENABLED"] = "False"
     os.environ["CORS_ORIGINS"] = "*"
     os.environ["SERVICE_DATA"] = local_dir
     os.environ["BENTO_AUTHZ_SERVICE_URL"] = "https://skip"

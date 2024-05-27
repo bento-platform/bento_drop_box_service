@@ -48,7 +48,7 @@ class LocalBackend(DropBoxBackend):
                         "size": entry_path_stat.st_size,
                         "lastModified": entry_path_stat.st_mtime,
                         "lastMetadataChange": entry_path_stat.st_ctime,
-                        "uri": self.config.service_url + f"/objects{rel_path}",
+                        "uri": self.config.service_url_base_path + f"/objects{rel_path}",
                     })
                 })
 
