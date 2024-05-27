@@ -1,4 +1,4 @@
-from bento_lib.config.pydantic import BentoBaseConfig
+from bento_lib.config.pydantic import BentoFastAPIBaseConfig
 from fastapi import Depends
 from functools import lru_cache
 from typing import Annotated, Literal
@@ -12,17 +12,14 @@ __all__ = [
 ]
 
 
-class Config(BentoBaseConfig):
+class Config(BentoFastAPIBaseConfig):
     service_id: str = str(":".join(list(SERVICE_TYPE.values())[:2]))
     service_name: str = "Bento Drop Box Service"
     service_description: str = "Drop box service for a Bento platform node."
-    service_url: str = "http://127.0.0.1:5000"  # base URL to construct object URIs from
 
     service_data: str = "data/"
     service_data_source: Literal["local"] = "local"
     traversal_limit: int = 16
-
-    authz_enabled: bool = True
 
 
 @lru_cache()
