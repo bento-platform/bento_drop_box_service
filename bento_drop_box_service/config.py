@@ -20,14 +20,13 @@ class Config(BentoFastAPIBaseConfig):
     service_data: str = "data/"
     service_data_source: Literal["local"] = "local"
     traversal_limit: int = 16
-    
-    use_https: bool = True
-    check_ssl_certificate: bool = False    
+
+    use_https: bool = False
+    check_ssl_certificate: bool = False
     service_access_key: str = "rXKVXeGgEQSA20ohl47y"
     service_secret_key: str = "FSnab2mkkeZB7CwG2ribIjwmIFOdbMa2qOITI1SR"
-    service_endpoint: str = "minio.bentov2.local"
+    service_endpoint: str = "bentov2-minio:9000"
     service_bucket: str = "drop-box"
-    
     use_s3_backend: bool = True if service_endpoint else False
 
 

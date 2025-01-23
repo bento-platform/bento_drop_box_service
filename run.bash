@@ -10,4 +10,3 @@ uvicorn "${ASGI_APP}" \
   --loop uvloop \
   --host 0.0.0.0 \
   --port "${INTERNAL_PORT}"
-
