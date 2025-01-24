@@ -1,3 +1,4 @@
+import os
 from bento_lib.config.pydantic import BentoFastAPIBaseConfig
 from fastapi import Depends
 from functools import lru_cache
@@ -21,13 +22,13 @@ class Config(BentoFastAPIBaseConfig):
     service_data_source: Literal["local"] = "local"
     traversal_limit: int = 16
 
-    use_https: bool = False
+    use_https: bool = True
     check_ssl_certificate: bool = False
-    service_access_key: str = "rXKVXeGgEQSA20ohl47y"
-    service_secret_key: str = "FSnab2mkkeZB7CwG2ribIjwmIFOdbMa2qOITI1SR"
-    service_endpoint: str = "bentov2-minio:9000"
-    service_bucket: str = "drop-box"
-    use_s3_backend: bool = True if service_endpoint else False
+    service_s3_access_key: str = os.environ.setdefault("S3_ACCESS_KEY", "")
+    service_s3_secret_key: str = os.environ.setdefault("S3_SECRET_KEY", "")
+    service_s3_endpoint: str = os.environ.setdefault("S3_ENDPOINT", "")
+    service_s3_bucket: str = os.environ.setdefault("S3_BUCKET", "")
+    use_s3_backend: bool = True if service_s3_endpoint else False
 
 
 @lru_cache()

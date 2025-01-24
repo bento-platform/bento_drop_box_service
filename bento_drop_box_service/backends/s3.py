@@ -1,4 +1,4 @@
-from aiobotocore.session import get_session
+import aioboto3
 import aiofiles
 import logging
 from ..config import Config
@@ -16,17 +16,17 @@ class S3Backend(DropBoxBackend):
         super().__init__(config, logger)
 
         protocol = "https" if config.use_https else "http"
-        endpoint_url = f"{protocol}://{config.service_endpoint}"
+        endpoint_url = f"{protocol}://{config.service_s3_endpoint}"
 
-        self.session = get_session()
+        self.session = aioboto3.Session()
         self.endpoint_url = endpoint_url
-        self.aws_access_key_id = config.service_access_key
-        self.aws_secret_access_key = config.service_secret_key
+        self.aws_access_key_id = config.service_s3_access_key
+        self.aws_secret_access_key = config.service_s3_secret_key
         self.verify = config.check_ssl_certificate
-        self.bucket_name = config.service_bucket
+        self.bucket_name = config.service_s3_bucket
 
     async def _create_s3_client(self):
-        return self.session.create_client(
+        return self.session.client(
             's3',
             endpoint_url=self.endpoint_url,
             aws_access_key_id=self.aws_access_key_id,
@@ -34,40 +34,64 @@ class S3Backend(DropBoxBackend):
             verify=self.verify
         )
 
-    async def _get_directory_tree(
-            self,
-            prefix: str = '',
-            level: int = 0,
-    ) -> tuple[DropBoxEntry, ...]:
+    # Function to create the directory tree
+    def create_directory_tree(self, files):
+        tree: list[DropBoxEntry] = []
+        for file in files:
+            parts = file["filePath"].split('/')
+            current_level = tree
+            for i, part in enumerate(parts[:-1]):
+                found = False
+                for item in current_level:
+                    if item["name"] == part:
+                        current_level = item["contents"]
+                        found = True
+                        break
+                if not found:
+                    directory_path = '/'.join(parts[:i + 1])
+                    new_dir = DropBoxEntry(
+                        name=part,
+                        filePath=directory_path,
+                        relativePath=directory_path,
+                        contents=[]
+                    )
+                    current_level.append(new_dir)
+                    current_level = new_dir["contents"]
+            new_file = DropBoxEntry(
+                name=file["name"],
+                filePath=file["filePath"],
+                relativePath=file["relativePath"],
+                size=file.get("size"),
+                lastModified=file["lastModified"],
+                lastMetadataChange=file["lastMetadataChange"],
+                uri=file["uri"]
+            )
+            current_level.append(new_file)
+        return tree
+
+    async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:
         async with await self._create_s3_client() as s3_client:
             paginator = s3_client.get_paginator('list_objects_v2')
-            page_iterator = paginator.paginate(Bucket=self.bucket_name, Prefix=prefix)
+            page_iterator = paginator.paginate(Bucket=self.bucket_name)
 
-            entries = []
+            files_list: list[DropBoxEntry] = []
             async for page in page_iterator:
                 if 'Contents' in page:
                     for obj in page['Contents']:
                         key = obj['Key']
-                        if level < self.config.traversal_limit or not key.endswith('/'):
+                        if key.count('/') < self.config.traversal_limit:
                             entry = {
                                 "name": key.split('/')[-1],
                                 "filePath": key,
                                 "relativePath": key,
-                                **({
-                                    "contents": await self._get_directory_tree(prefix=key, level=level + 1),
-                                } if key.endswith('/') else {
-                                    "size": obj['Size'],
-                                    "lastModified": obj['LastModified'].timestamp(),
-                                    "lastMetadataChange": obj['LastModified'].timestamp(),
-                                    "uri": f"{self.config.service_url_base_path}/objects/{key}",
-                                })
+                                "size": obj['Size'],
+                                "lastModified": obj['LastModified'].timestamp(),
+                                "lastMetadataChange": obj['LastModified'].timestamp(),
+                                "uri": f"{self.config.service_url_base_path}/objects/{key}",
                             }
-                            entries.append(entry)
+                            files_list.append(entry)
 
-        return tuple(sorted(entries, key=lambda e: e["name"]))
-
-    async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:
-        return await self._get_directory_tree()
+        return tuple(self.create_directory_tree(files_list))
 
     async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:
         path = secure_filename(path)

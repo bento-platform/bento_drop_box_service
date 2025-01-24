@@ -25,7 +25,7 @@ fastapi = {extras = ["all"], version = "^0.115.4"}
 werkzeug = "^3.0.6"
 python-multipart = "^0.0.18"
 pydantic-settings = "^2.2.1"
-aiobotocore = "^2.4.0" 
+aioboto3 = "*"
 
 [tool.poetry.group.dev.dependencies]
 tox = "^4.15.0"
