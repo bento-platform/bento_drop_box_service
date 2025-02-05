@@ -21,6 +21,14 @@ class Config(BentoFastAPIBaseConfig):
     service_data_source: Literal["local"] = "local"
     traversal_limit: int = 16
 
+    s3_access_key: str = ""
+    s3_secret_key: str = ""
+    s3_endpoint: str = ""
+    s3_bucket: str = ""
+    s3_region_name: str = ""
+    s3_use_https: bool = True
+    s3_check_ssl_certificate: bool = False
+
 
 @lru_cache()
 def get_config() -> Config:
