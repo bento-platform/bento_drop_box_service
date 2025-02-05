@@ -1,29 +1,30 @@
 import aioboto3
 import aiofiles
 import logging
-from ..config import Config
-
-from .base import DropBoxEntry, DropBoxBackend
 
 from fastapi import status
 from fastapi.requests import Request
 from starlette.responses import Response
 from werkzeug.utils import secure_filename
 
+from .base import DropBoxEntry, DropBoxBackend
+from ..config import Config
+
 
 class S3Backend(DropBoxBackend):
     def __init__(self, config: Config, logger: logging.Logger):
         super().__init__(config, logger)
 
-        protocol = "https" if config.use_https else "http"
-        endpoint_url = f"{protocol}://{config.service_s3_endpoint}"
+        protocol = "https" if config.s3_use_https else "http"
+        endpoint_url = f"{protocol}://{config.s3_endpoint}"
 
         self.session = aioboto3.Session()
         self.endpoint_url = endpoint_url
-        self.aws_access_key_id = config.service_s3_access_key
-        self.aws_secret_access_key = config.service_s3_secret_key
-        self.verify = config.check_ssl_certificate
-        self.bucket_name = config.service_s3_bucket
+        self.aws_access_key_id = config.s3_access_key
+        self.aws_secret_access_key = config.s3_secret_key
+        self.verify = config.s3_check_ssl_certificate
+        self.region_name = config.s3_region_name
+        self.bucket_name = config.s3_bucket
 
     async def _create_s3_client(self):
         return self.session.client(
@@ -31,11 +32,12 @@ class S3Backend(DropBoxBackend):
             endpoint_url=self.endpoint_url,
             aws_access_key_id=self.aws_access_key_id,
             aws_secret_access_key=self.aws_secret_access_key,
+            region_name=self.region_name,
             verify=self.verify
         )
 
     # Function to create the directory tree
-    def create_directory_tree(self, files):
+    def create_directory_tree(self, files: list[DropBoxEntry]):
         tree: list[DropBoxEntry] = []
         for file in files:
             parts = file["filePath"].split('/')

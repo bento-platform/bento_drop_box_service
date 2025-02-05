@@ -18,7 +18,7 @@ __all__ = [
 
 @lru_cache()
 def get_backend(config: ConfigDependency, logger: LoggerDependency) -> DropBoxBackend:
-    if config.use_s3_backend:
+    if config.s3_endpoint:
         return S3Backend(config, logger)
     return LocalBackend(config, logger)
 
