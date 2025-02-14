@@ -2,6 +2,7 @@ from bento_lib.config.pydantic import BentoFastAPIBaseConfig
 from fastapi import Depends
 from functools import lru_cache
 from typing import Annotated, Literal
+from pydantic import Field
 
 from .constants import SERVICE_TYPE
 
@@ -28,6 +29,7 @@ class Config(BentoFastAPIBaseConfig):
     s3_region_name: str = ""
     s3_use_https: bool = True
     s3_check_ssl_certificate: bool = False
+    use_s3_backend: bool = Field(default_factory=lambda c: c["s3_endpoint"] != "")
 
 
 @lru_cache()
