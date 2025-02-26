@@ -27,8 +27,8 @@ class Config(BentoFastAPIBaseConfig):
     s3_endpoint: str = ""
     s3_bucket: str = ""
     s3_region_name: str = ""
+    s3_validate_ssl: bool = False
     s3_use_https: bool = True
-    s3_check_ssl_certificate: bool = False
     use_s3_backend: bool = Field(default_factory=lambda c: c["s3_endpoint"] != "")
 
 

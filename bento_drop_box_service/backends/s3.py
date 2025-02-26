@@ -20,9 +20,9 @@ class S3Backend(DropBoxBackend):
 
         self.session = aioboto3.Session()
         self.endpoint_url = endpoint_url
-        self.aws_access_key_id = config.s3_access_key
-        self.aws_secret_access_key = config.s3_secret_key
-        self.verify = config.s3_check_ssl_certificate
+        self.s3_access_key_id = config.s3_access_key
+        self.s3_secret_access_key = config.s3_secret_key
+        self.verify = config.s3_validate_ssl
         self.region_name = config.s3_region_name
         self.bucket_name = config.s3_bucket
 
@@ -30,39 +30,45 @@ class S3Backend(DropBoxBackend):
         return self.session.client(
             's3',
             endpoint_url=self.endpoint_url,
-            aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key,
+            aws_access_key_id=self.s3_access_key_id,
+            aws_secret_access_key=self.s3_secret_access_key,
             region_name=self.region_name,
             verify=self.verify
         )
 
-    # Function to create the directory tree
+    # Function to create the directory tree from a list of files
+    # For each file present in the list :
+    # - Check if the directories contained in the filePath exist in the tree (if not, create a node in the tree for the directory)
+    # - When all the directories in the filePath are present in the tree, add the file to the right place in the tree
     def create_directory_tree(self, files: list[DropBoxEntry]):
         tree: list[DropBoxEntry] = []
         for file in files:
-            parts = file["filePath"].split('/')
+            directories = file["filePath"].split('/')
             current_level = tree
-            for i, part in enumerate(parts[:-1]):
-                found = False
-                for item in current_level:
-                    if item["name"] == part:
-                        current_level = item["contents"]
-                        found = True
+            for i, directory_name in enumerate(directories[:-1]):
+                exist_in_tree = False
+                for tree_node in current_level:
+                    # 
+                    if tree_node["name"] == directory_name:
+                        current_level = tree_node["contents"]
+                        exist_in_tree = True
                         break
-                if not found:
-                    directory_path = '/'.join(parts[:i + 1])
-                    new_dir = DropBoxEntry(
-                        name=part,
+                if not exist_in_tree:
+                    # If the directory is not in the tree, create it
+                    directory_path = '/'.join(directories[:i + 1])
+                    new_tree_node = DropBoxEntry(
+                        name=directory_name,
                         filePath=directory_path,
                         relativePath=directory_path,
                         contents=[]
                     )
-                    current_level.append(new_dir)
-                    current_level = new_dir["contents"]
+                    current_level.append(new_tree_node)
+                    current_level = new_tree_node["contents"]
+            # Add file to the tree, at the right place (current level)
             new_file = DropBoxEntry(
                 name=file["name"],
                 filePath=file["filePath"],
-                relativePath=file["relativePath"],
+                relativePath='/' + file["relativePath"],
                 size=file.get("size"),
                 lastModified=file["lastModified"],
                 lastMetadataChange=file["lastMetadataChange"],
@@ -97,14 +103,8 @@ class S3Backend(DropBoxBackend):
 
     async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:
         path = secure_filename(path)
-
         async with await self._create_s3_client() as s3_client:
-            async with aiofiles.tempfile.NamedTemporaryFile('wb') as temp_file:
-                async for chunk in request.stream():
-                    await temp_file.write(chunk)
-                await temp_file.seek(0)
-                async with aiofiles.open(temp_file.name, 'rb') as file:
-                    await s3_client.put_object(Bucket=self.bucket_name, Key=path, Body=await file.read())
+            await s3_client.put_object(Bucket=self.bucket_name, Key=path, Body=await request.body())
 
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
