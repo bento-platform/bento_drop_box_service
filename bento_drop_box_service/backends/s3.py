@@ -1,5 +1,4 @@
 import aioboto3
-import aiofiles
 import logging
 
 from fastapi import status
@@ -38,7 +37,8 @@ class S3Backend(DropBoxBackend):
 
     # Function to create the directory tree from a list of files
     # For each file present in the list :
-    # - Check if the directories contained in the filePath exist in the tree (if not, create a node in the tree for the directory)
+    # - Check if the directories contained in the filePath exist in the tree
+    #   (if not, create a node in the tree for the directory)
     # - When all the directories in the filePath are present in the tree, add the file to the right place in the tree
     def create_directory_tree(self, files: list[DropBoxEntry]):
         tree: list[DropBoxEntry] = []
@@ -48,7 +48,6 @@ class S3Backend(DropBoxBackend):
             for i, directory_name in enumerate(directories[:-1]):
                 exist_in_tree = False
                 for tree_node in current_level:
-                    # 
                     if tree_node["name"] == directory_name:
                         current_level = tree_node["contents"]
                         exist_in_tree = True
