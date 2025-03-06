@@ -1,9 +1,10 @@
 import aioboto3
 import logging
 
-from fastapi import status
+import aioboto3.resources
+from fastapi import HTTPException, status
 from fastapi.requests import Request
-from starlette.responses import Response
+from starlette.responses import Response, StreamingResponse
 from werkzeug.utils import secure_filename
 
 from .base import DropBoxEntry, DropBoxBackend
@@ -18,21 +19,20 @@ class S3Backend(DropBoxBackend):
         endpoint_url = f"{protocol}://{config.s3_endpoint}"
 
         self.session = aioboto3.Session()
-        self.endpoint_url = endpoint_url
-        self.s3_access_key_id = config.s3_access_key
-        self.s3_secret_access_key = config.s3_secret_key
-        self.verify = config.s3_validate_ssl
-        self.region_name = config.s3_region_name
+        self.s3_kwargs = {
+            "endpoint_url": endpoint_url,
+            "aws_access_key_id": config.s3_access_key,
+            "aws_secret_access_key": config.s3_secret_key,
+            "region_name": config.s3_region_name,
+            "verify": config.s3_validate_ssl
+        }
         self.bucket_name = config.s3_bucket
+        self.s3_client = self.session.client("s3", **self.s3_kwargs)
 
     async def _create_s3_client(self):
         return self.session.client(
             's3',
-            endpoint_url=self.endpoint_url,
-            aws_access_key_id=self.s3_access_key_id,
-            aws_secret_access_key=self.s3_secret_access_key,
-            region_name=self.region_name,
-            verify=self.verify
+            **self.s3_kwargs
         )
 
     # Function to create the directory tree from a list of files
@@ -108,10 +108,28 @@ class S3Backend(DropBoxBackend):
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     async def retrieve_from_path(self, path: str) -> Response:
-        async with await self._create_s3_client() as s3_client:
-            response = await s3_client.get_object(Bucket=self.bucket_name, Key=path)
-            file_content = await response['Body'].read()
-        return Response(content=file_content, media_type='application/octet-stream')
+        chunk_size = 100 * 1024
+        file_name = path.split("/")[-1]
+        async def stream_object():
+            async with await self._create_s3_client() as s3:
+                obj = await s3.get_object(Bucket=self.bucket_name, Key=path)
+
+                self.logger.debug(f"Streaming {path}")
+                stream = obj["Body"]
+                total = 0
+                while chunk := await stream.read(chunk_size):
+                    total += chunk_size
+                    yield chunk
+
+        return StreamingResponse(
+            stream_object(),
+            headers={
+                "CONTENT-DISPOSITION": f"attachment: filename='{file_name}'"
+            }
+        )
+
+
+
 
     async def delete_at_path(self, path: str) -> Response:
         async with await self._create_s3_client() as s3_client:
