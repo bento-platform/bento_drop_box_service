@@ -21,14 +21,15 @@ class LocalBackend(DropBoxBackend):
         sub_path: tuple[str, ...],
         level: int = 0,
     ) -> tuple[DropBoxEntry, ...]:
+        traversal_limit = self.config.traversal_limit
+
         root_path = root_path.absolute()
         entries: list[DropBoxEntry] = []
         sub_path_str: str = "/".join(sub_path)
         current_dir = (root_path / sub_path_str).absolute() if sub_path_str else root_path.absolute()
         # noinspection PyUnresolvedReferences
-        for entry in (await aiofiles.os.listdir(current_dir)):
-            if (level < self.config.traversal_limit or not (
-                    await aiofiles.ospath.isdir(current_dir))) and entry[0] != ".":
+        for entry in await aiofiles.os.listdir(current_dir):
+            if (level < traversal_limit or not (await aiofiles.ospath.isdir(current_dir))) and entry[0] != ".":
                 if "/" in entry:
                     self.logger.warning(f"Skipped entry with a '/' in its name: {entry}")
                     continue
@@ -38,19 +39,27 @@ class LocalBackend(DropBoxBackend):
 
                 rel_path = (f"/{sub_path_str}" if sub_path_str else "") + f"/{entry}"
 
-                entries.append({
-                    "name": entry,
-                    "filePath": str(entry_path),  # Actual path on file system
-                    "relativePath": rel_path,  # Path relative to root of drop box (/)
-                    **({
-                        "contents": await self._get_directory_tree(root_path, (*sub_path, entry), level=level + 1),
-                    } if (await aiofiles.ospath.isdir(entry_path)) else {
-                        "size": entry_path_stat.st_size,
-                        "lastModified": entry_path_stat.st_mtime,
-                        "lastMetadataChange": entry_path_stat.st_ctime,
-                        "uri": self.config.service_url_base_path + f"/objects{rel_path}",
-                    })
-                })
+                entries.append(
+                    {
+                        "name": entry,
+                        "filePath": str(entry_path),  # Actual path on file system
+                        "relativePath": rel_path,  # Path relative to root of drop box (/)
+                        **(
+                            {
+                                "contents": await self._get_directory_tree(
+                                    root_path, (*sub_path, entry), level=level + 1
+                                ),
+                            }
+                            if (await aiofiles.ospath.isdir(entry_path))
+                            else {
+                                "size": entry_path_stat.st_size,
+                                "lastModified": entry_path_stat.st_mtime,
+                                "lastMetadataChange": entry_path_stat.st_ctime,
+                                "uri": self.config.service_url_base_path + f"/objects{rel_path}",
+                            }
+                        ),
+                    }
+                )
 
         return tuple(sorted(entries, key=lambda e: e["name"]))
 
@@ -104,13 +113,15 @@ class LocalBackend(DropBoxBackend):
                 if not path_parts:  # End of the path
                     if "contents" in node:
                         raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot {verb} a directory")
+                            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot {verb} a directory"
+                        )
 
                     return node
 
                 if "contents" not in node:
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST, detail=f"{node['name']} is not a directory")
+                        status_code=status.HTTP_400_BAD_REQUEST, detail=f"{node['name']} is not a directory"
+                    )
 
                 directory_items = node["contents"]
                 # Go around another iteration, nesting into this directory
