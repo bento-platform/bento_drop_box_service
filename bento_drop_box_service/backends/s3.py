@@ -2,7 +2,7 @@ import aioboto3
 import logging
 
 import aioboto3.resources
-from fastapi import HTTPException, status
+from fastapi import status
 from fastapi.requests import Request
 from starlette.responses import Response, StreamingResponse
 from werkzeug.utils import secure_filename
@@ -107,29 +107,38 @@ class S3Backend(DropBoxBackend):
 
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-    async def retrieve_from_path(self, path: str) -> Response:
-        chunk_size = 100 * 1024
+    async def _retrive_headers(self, path: str) -> dict[str, str]:
         file_name = path.split("/")[-1]
+        async with await self._create_s3_client() as s3:
+            head = await s3.head_object(Bucket=self.bucket_name, Key=path)
+            content_length = head["ContentLength"]
+            etag = head["ETag"]
+            content_type = head["ContentType"]
+            last_modified = head["LastModified"]
+        return {
+            "CONTENT-DISPOSITION": file_name,
+            "Content-Length": str(content_length),
+            "Content-Type": content_type,
+            "ETag": etag,
+            "Last-Modified": str(last_modified)
+        }
+
+    async def retrieve_from_path(self, path: str) -> Response:
+        chunk_size = 8 * 1000 * 1000    # 8MB
+        headers = await self._retrive_headers(path)
+
         async def stream_object():
             async with await self._create_s3_client() as s3:
                 obj = await s3.get_object(Bucket=self.bucket_name, Key=path)
-
                 self.logger.debug(f"Streaming {path}")
                 stream = obj["Body"]
-                total = 0
                 while chunk := await stream.read(chunk_size):
-                    total += chunk_size
                     yield chunk
 
         return StreamingResponse(
-            stream_object(),
-            headers={
-                "CONTENT-DISPOSITION": f"attachment: filename='{file_name}'"
-            }
+            content=stream_object(),
+            headers=headers,
         )
-
-
-
 
     async def delete_at_path(self, path: str) -> Response:
         async with await self._create_s3_client() as s3_client:
