@@ -76,10 +76,11 @@ class S3Backend(DropBoxBackend):
             current_level.append(new_file)
         return tree
 
-    async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:
+    async def get_directory_tree(self, sub_path: str | None = None) -> tuple[DropBoxEntry, ...]:
+        prefix = sub_path if sub_path else ""
         async with await self._create_s3_client() as s3_client:
             paginator = s3_client.get_paginator('list_objects_v2')
-            page_iterator = paginator.paginate(Bucket=self.bucket_name)
+            page_iterator = paginator.paginate(Bucket=self.bucket_name, Prefix=prefix)
 
             files_list: list[DropBoxEntry] = []
             async for page in page_iterator:
@@ -124,7 +125,7 @@ class S3Backend(DropBoxBackend):
         }
 
     async def retrieve_from_path(self, path: str) -> Response:
-        chunk_size = 8 * 1000 * 1000    # 8MB
+        chunk_size = 8 * 1024 * 1024    # 8MB
         headers = await self._retrive_headers(path)
 
         async def stream_object():

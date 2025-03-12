@@ -54,8 +54,10 @@ class LocalBackend(DropBoxBackend):
 
         return tuple(sorted(entries, key=lambda e: e["name"]))
 
-    async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:
+    async def get_directory_tree(self, sub_path: str | None = None) -> tuple[DropBoxEntry, ...]:
         root_path: pathlib.Path = pathlib.Path(self.config.service_data)
+        if sub_path:
+            root_path = root_path.joinpath(sub_path)
         return await self._get_directory_tree(root_path, ())
 
     async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:

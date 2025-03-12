@@ -24,6 +24,13 @@ async def drop_box_tree(backend: BackendDependency) -> Response:
     return JSONResponse(await backend.get_directory_tree())
 
 
+@drop_box_router.get("/tree/{path:path}", dependencies=(authz_view_dependency,))
+async def drop_box_subtree(backend: BackendDependency, path: str | None) -> Response:
+    # Same as /tree endpoint, but accepts a subpath in order to return a directory sub-tree.
+    # Useful to download files for WES workflows that take a directory input.
+    return JSONResponse(await backend.get_directory_tree(sub_path=path))
+
+
 @drop_box_router.get("/objects/{path:path}", dependencies=(authz_view_dependency,))
 async def drop_box_retrieve(path: str, backend: BackendDependency):
     return await backend.retrieve_from_path(path)

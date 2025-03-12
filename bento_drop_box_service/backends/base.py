@@ -35,7 +35,7 @@ class DropBoxBackend(ABC):
         return self._logger
 
     @abstractmethod
-    async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:  # pragma: no cover
+    async def get_directory_tree(self, sub_path: str | None = None) -> tuple[DropBoxEntry, ...]:  # pragma: no cover
         pass
 
     @abstractmethod
