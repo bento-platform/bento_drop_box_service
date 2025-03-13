@@ -7,6 +7,7 @@ from ..logger import LoggerDependency
 
 from .base import DropBoxBackend
 from .local import LocalBackend
+from .s3 import S3Backend
 
 
 __all__ = [
@@ -17,6 +18,8 @@ __all__ = [
 
 @lru_cache()
 def get_backend(config: ConfigDependency, logger: LoggerDependency) -> DropBoxBackend:
+    if config.use_s3_backend:
+        return S3Backend(config, logger)
     return LocalBackend(config, logger)
 
 
