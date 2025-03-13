@@ -24,16 +24,13 @@ class S3Backend(DropBoxBackend):
             "aws_access_key_id": config.s3_access_key,
             "aws_secret_access_key": config.s3_secret_key,
             "region_name": config.s3_region_name,
-            "verify": config.s3_validate_ssl
+            "verify": config.s3_validate_ssl,
         }
         self.bucket_name = config.s3_bucket
         self.s3_client = self.session.client("s3", **self.s3_kwargs)
 
     async def _create_s3_client(self):
-        return self.session.client(
-            's3',
-            **self.s3_kwargs
-        )
+        return self.session.client("s3", **self.s3_kwargs)
 
     # Function to create the directory tree from a list of files
     # For each file present in the list :
@@ -43,7 +40,7 @@ class S3Backend(DropBoxBackend):
     def create_directory_tree(self, files: list[DropBoxEntry]):
         tree: list[DropBoxEntry] = []
         for file in files:
-            directories = file["filePath"].split('/')
+            directories = file["filePath"].split("/")
             current_level = tree
             for i, directory_name in enumerate(directories[:-1]):
                 exist_in_tree = False
@@ -54,12 +51,9 @@ class S3Backend(DropBoxBackend):
                         break
                 if not exist_in_tree:
                     # If the directory is not in the tree, create it
-                    directory_path = '/'.join(directories[:i + 1])
+                    directory_path = "/".join(directories[: i + 1])
                     new_tree_node = DropBoxEntry(
-                        name=directory_name,
-                        filePath=directory_path,
-                        relativePath=directory_path,
-                        contents=[]
+                        name=directory_name, filePath=directory_path, relativePath=directory_path, contents=[]
                     )
                     current_level.append(new_tree_node)
                     current_level = new_tree_node["contents"]
@@ -67,11 +61,11 @@ class S3Backend(DropBoxBackend):
             new_file = DropBoxEntry(
                 name=file["name"],
                 filePath=file["filePath"],
-                relativePath='/' + file["relativePath"],
+                relativePath="/" + file["relativePath"],
                 size=file.get("size"),
                 lastModified=file["lastModified"],
                 lastMetadataChange=file["lastMetadataChange"],
-                uri=file["uri"]
+                uri=file["uri"],
             )
             current_level.append(new_file)
         return tree
@@ -79,22 +73,22 @@ class S3Backend(DropBoxBackend):
     async def get_directory_tree(self, sub_path: str | None = None) -> tuple[DropBoxEntry, ...]:
         prefix = sub_path if sub_path else ""
         async with await self._create_s3_client() as s3_client:
-            paginator = s3_client.get_paginator('list_objects_v2')
+            paginator = s3_client.get_paginator("list_objects_v2")
             page_iterator = paginator.paginate(Bucket=self.bucket_name, Prefix=prefix)
 
             files_list: list[DropBoxEntry] = []
             async for page in page_iterator:
-                if 'Contents' in page:
-                    for obj in page['Contents']:
-                        key = obj['Key']
-                        if key.count('/') < self.config.traversal_limit:
+                if "Contents" in page:
+                    for obj in page["Contents"]:
+                        key = obj["Key"]
+                        if key.count("/") < self.config.traversal_limit:
                             entry = {
-                                "name": key.split('/')[-1],
+                                "name": key.split("/")[-1],
                                 "filePath": key,
                                 "relativePath": key,
-                                "size": obj['Size'],
-                                "lastModified": obj['LastModified'].timestamp(),
-                                "lastMetadataChange": obj['LastModified'].timestamp(),
+                                "size": obj["Size"],
+                                "lastModified": obj["LastModified"].timestamp(),
+                                "lastMetadataChange": obj["LastModified"].timestamp(),
                                 "uri": f"{self.config.service_url_base_path}/objects/{key}",
                             }
                             files_list.append(entry)
@@ -121,11 +115,11 @@ class S3Backend(DropBoxBackend):
             "Content-Length": str(content_length),
             "Content-Type": content_type,
             "ETag": etag,
-            "Last-Modified": str(last_modified)
+            "Last-Modified": str(last_modified),
         }
 
     async def retrieve_from_path(self, path: str) -> Response:
-        chunk_size = 8 * 1024 * 1024    # 8MB
+        chunk_size = 8 * 1024 * 1024  # 8MB
         headers = await self._retrive_headers(path)
 
         async def stream_object():
