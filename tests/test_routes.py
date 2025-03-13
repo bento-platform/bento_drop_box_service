@@ -3,8 +3,8 @@ def validate_tree(res):
 
     assert res.status_code == 200
     assert len(tree) == 2
-    assert tree[0]['name'] == 'patate.txt'
-    assert 'contents' in tree[1]
+    assert tree[0]["name"] == "patate.txt"
+    assert "contents" in tree[1]
 
 
 def test_service_info(client_local):

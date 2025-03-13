@@ -51,10 +51,18 @@ poetry run python -m debugpy --listen "0.0.0.0:5678" -m uvicorn \
 
 ### Running tests
 
-To run tests and linting, run Tox:
+To run tests and linting/formatting checks, run Tox:
 
 ```bash
 poetry run tox
+```
+
+### Running the formatter
+
+To format the code in the repository using the `ruff` formatter, run the following:
+
+```bash
+poetry run ruff format
 ```
 
 

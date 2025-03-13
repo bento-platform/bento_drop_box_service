@@ -60,7 +60,8 @@ async def drop_box_upload(request: Request, path: str, backend: BackendDependenc
     content_length = int(request.headers.get("Content-Length", "0"))
     if content_length == 0:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="No file provided or no/zero content length specified")
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No file provided or no/zero content length specified"
+        )
     return await backend.upload_to_path(request, path, content_length)
 
 

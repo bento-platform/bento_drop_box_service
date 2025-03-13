@@ -30,5 +30,6 @@ def test_config():
 @pytest.fixture()
 def client_local(test_config: Config):
     from bento_drop_box_service.app import application
+
     application.dependency_overrides[get_config] = get_test_local_config
     yield TestClient(application)
