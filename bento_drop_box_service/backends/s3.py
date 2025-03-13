@@ -32,12 +32,14 @@ class S3Backend(DropBoxBackend):
     async def _create_s3_client(self):
         return self.session.client("s3", **self.s3_kwargs)
 
-    # Function to create the directory tree from a list of files
-    # For each file present in the list :
-    # - Check if the directories contained in the filePath exist in the tree
-    #   (if not, create a node in the tree for the directory)
-    # - When all the directories in the filePath are present in the tree, add the file to the right place in the tree
     def create_directory_tree(self, files: list[DropBoxEntry]):
+        """
+        Function to create the directory tree from a list of files
+        For each file present in the list :
+         - Check if the directories contained in the filePath exist in the tree
+           (if not, create a node in the tree for the directory)
+         - When all the directories in the filePath are present in the tree, add the file to the right place in the tree
+        """
         tree: list[DropBoxEntry] = []
         for file in files:
             directories = file["filePath"].split("/")
@@ -72,26 +74,33 @@ class S3Backend(DropBoxBackend):
 
     async def get_directory_tree(self, sub_path: str | None = None) -> tuple[DropBoxEntry, ...]:
         prefix = sub_path if sub_path else ""
+        traversal_limit = self.config.traversal_limit
         async with await self._create_s3_client() as s3_client:
             paginator = s3_client.get_paginator("list_objects_v2")
             page_iterator = paginator.paginate(Bucket=self.bucket_name, Prefix=prefix)
 
             files_list: list[DropBoxEntry] = []
             async for page in page_iterator:
-                if "Contents" in page:
-                    for obj in page["Contents"]:
-                        key = obj["Key"]
-                        if key.count("/") < self.config.traversal_limit:
-                            entry = {
-                                "name": key.split("/")[-1],
-                                "filePath": key,
-                                "relativePath": key,
-                                "size": obj["Size"],
-                                "lastModified": obj["LastModified"].timestamp(),
-                                "lastMetadataChange": obj["LastModified"].timestamp(),
-                                "uri": f"{self.config.service_url_base_path}/objects/{key}",
-                            }
-                            files_list.append(entry)
+                if "Contents" not in page:
+                    # Page has no objects, nothing to do.
+                    # Can occur if no objects are found for the given sub_path.
+                    continue
+                for obj in page["Contents"]:
+                    key = obj["Key"]
+                    if key.count("/") > traversal_limit:
+                        self.logger.warning(f"Object key {key} violates traversal limit {traversal_limit}")
+                        continue
+                    last_modified = obj["LastModified"].timestamp()
+                    entry = {
+                        "name": key.split("/")[-1],
+                        "filePath": key,
+                        "relativePath": key,
+                        "size": obj["Size"],
+                        "lastModified": last_modified,
+                        "lastMetadataChange": last_modified,
+                        "uri": f"{self.config.service_url_base_path}/objects/{key}",
+                    }
+                    files_list.append(entry)
 
         return tuple(self.create_directory_tree(files_list))
 
@@ -106,20 +115,16 @@ class S3Backend(DropBoxBackend):
         file_name = path.split("/")[-1]
         async with await self._create_s3_client() as s3:
             head = await s3.head_object(Bucket=self.bucket_name, Key=path)
-            content_length = head["ContentLength"]
-            etag = head["ETag"]
-            content_type = head["ContentType"]
-            last_modified = head["LastModified"]
         return {
-            "CONTENT-DISPOSITION": file_name,
-            "Content-Length": str(content_length),
-            "Content-Type": content_type,
-            "ETag": etag,
-            "Last-Modified": str(last_modified),
+            "Content-Disposition": file_name,
+            "Content-Length": str(head["ContentLength"]),
+            "Content-Type": head["ContentType"],
+            "ETag": head["ETag"],
+            "Last-Modified": str(head["LastModified"]),
         }
 
     async def retrieve_from_path(self, path: str) -> Response:
-        chunk_size = 8 * 1024 * 1024  # 8MB
+        chunk_size = self.config.s3_chunk_size
         headers = await self._retrive_headers(path)
 
         async def stream_object():
