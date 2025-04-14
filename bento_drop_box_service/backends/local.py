@@ -68,7 +68,7 @@ class LocalBackend(DropBoxBackend):
         if sub_path:
             root_path = root_path.joinpath(sub_path)
 
-        if not str(root_path).startswith(self.config.service_data):
+        if not str(root_path.absolute()).startswith(self.config.service_data):
             # Only accept requests that are under the data volume
             self.logger.warning(f"attempted to get directory tree outside of drop box data volume: {root_path}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot inspect provided sub tree")
