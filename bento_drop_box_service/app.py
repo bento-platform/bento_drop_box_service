@@ -22,9 +22,7 @@ BENTO_SERVICE_INFO: BentoExtraServiceInfo = {
 config_for_setup = get_config()
 logger = get_logger(config_for_setup)
 
-application = BentoFastAPI(
-    authz_middleware, config_for_setup, logger, BENTO_SERVICE_INFO, SERVICE_TYPE, __version__
-)
+application = BentoFastAPI(authz_middleware, config_for_setup, logger, BENTO_SERVICE_INFO, SERVICE_TYPE, __version__)
 application.include_router(drop_box_router)
 
 # Backend init logs
