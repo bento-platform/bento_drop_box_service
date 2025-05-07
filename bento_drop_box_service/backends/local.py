@@ -41,7 +41,7 @@ class LocalBackend(DropBoxBackend):
 
                 rel_path = (f"/{sub_path_str}" if sub_path_str else "") + f"/{entry}"
                 
-                if (await aiofiles.ospath.isdir(entry_path)) or self.is_file_extension_included(entry, include):
+                if (await aiofiles.ospath.isdir(entry_path)) or not self.is_file_extension_ignored(entry, ignore):
                     entries.append(
                         {
                             "name": entry,
@@ -70,6 +70,11 @@ class LocalBackend(DropBoxBackend):
         if included_extensions is None:
             return True
         return any([entry.endswith(f".{extension}") for extension in included_extensions])
+    
+    def is_file_extension_ignored(self, entry:str, ignored_extensions:list[str] | None) -> bool:
+        if ignored_extensions is None:
+            return False
+        return not all([not entry.endswith(f".{extension}") for extension in ignored_extensions])
     
     async def get_directory_tree(
             self, 
