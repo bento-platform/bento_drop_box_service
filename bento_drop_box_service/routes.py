@@ -1,6 +1,6 @@
 from bento_lib.auth.permissions import P_VIEW_DROP_BOX, P_INGEST_DROP_BOX, P_DELETE_DROP_BOX
 from bento_lib.auth.resources import RESOURCE_EVERYTHING
-from fastapi import APIRouter, Form, Request, status
+from fastapi import APIRouter, Form, Query, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 from starlette.responses import Response
@@ -20,8 +20,12 @@ authz_delete_dependency = authz_middleware.dep_require_permissions_on_resource(f
 
 
 @drop_box_router.get("/tree", dependencies=(authz_view_dependency,))
-async def drop_box_tree(backend: BackendDependency) -> Response:
-    return JSONResponse(await backend.get_directory_tree())
+async def drop_box_tree(
+    backend: BackendDependency, 
+    include: Annotated[list[str] | None, Query()] = None,
+    ignore: Annotated[list[str] | None, Query()] = None
+    ) -> Response:
+    return JSONResponse(await backend.get_directory_tree(include=include, ignore=ignore))
 
 
 @drop_box_router.get("/objects/{path:path}", dependencies=(authz_view_dependency,))
