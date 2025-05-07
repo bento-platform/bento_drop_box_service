@@ -20,6 +20,8 @@ class LocalBackend(DropBoxBackend):
         root_path: pathlib.Path,
         sub_path: tuple[str, ...],
         level: int = 0,
+        ignore: list[str] | None = None,
+        include: list[str] | None = None
     ) -> tuple[DropBoxEntry, ...]:
         traversal_limit = self.config.traversal_limit
 
@@ -33,6 +35,8 @@ class LocalBackend(DropBoxBackend):
                 if "/" in entry:
                     self.logger.warning(f"Skipped entry with a '/' in its name: {entry}")
                     continue
+                
+                print(entry.endswith(".json"))
 
                 entry_path = current_dir / entry
                 entry_path_stat = entry_path.stat()
@@ -63,7 +67,12 @@ class LocalBackend(DropBoxBackend):
 
         return tuple(sorted(entries, key=lambda e: e["name"]))
 
-    async def get_directory_tree(self, sub_path: str | None = None) -> tuple[DropBoxEntry, ...]:
+    async def get_directory_tree(
+            self, 
+            sub_path: str | None = None,
+            ignore: list[str] | None = None,
+            include: list[str] | None = None
+        , ) -> tuple[DropBoxEntry, ...]:
         root_path: pathlib.Path = pathlib.Path(self.config.service_data)
         if sub_path:
             root_path = root_path.joinpath(sub_path)
@@ -72,7 +81,7 @@ class LocalBackend(DropBoxBackend):
             # Only accept requests that are under the data volume
             self.logger.warning(f"attempted to get directory tree outside of drop box data volume: {root_path}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot inspect provided sub tree")
-        return await self._get_directory_tree(root_path, ())
+        return await self._get_directory_tree(root_path, (), include=include, ignore=ignore)
 
     async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:
         sd = self.config.service_data
