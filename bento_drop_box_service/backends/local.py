@@ -36,37 +36,41 @@ class LocalBackend(DropBoxBackend):
                     self.logger.warning(f"Skipped entry with a '/' in its name: {entry}")
                     continue
                 
-                print(entry.endswith(".json"))
-
                 entry_path = current_dir / entry
                 entry_path_stat = entry_path.stat()
 
                 rel_path = (f"/{sub_path_str}" if sub_path_str else "") + f"/{entry}"
-
-                entries.append(
-                    {
-                        "name": entry,
-                        "filePath": str(entry_path),  # Actual path on file system
-                        "relativePath": rel_path,  # Path relative to root of drop box (/)
-                        **(
-                            {
-                                "contents": await self._get_directory_tree(
-                                    root_path, (*sub_path, entry), level=level + 1
-                                ),
-                            }
-                            if (await aiofiles.ospath.isdir(entry_path))
-                            else {
-                                "size": entry_path_stat.st_size,
-                                "lastModified": entry_path_stat.st_mtime,
-                                "lastMetadataChange": entry_path_stat.st_ctime,
-                                "uri": self.config.service_url_base_path + f"/objects{rel_path}",
-                            }
-                        ),
-                    }
-                )
+                
+                if (await aiofiles.ospath.isdir(entry_path)) or self.is_file_extension_included(entry, include):
+                    entries.append(
+                        {
+                            "name": entry,
+                            "filePath": str(entry_path),  # Actual path on file system
+                            "relativePath": rel_path,  # Path relative to root of drop box (/)
+                            **(
+                                {
+                                    "contents": await self._get_directory_tree(
+                                        root_path, (*sub_path, entry), level=level + 1, ignore=ignore, include=include
+                                    ),
+                                }
+                                if (await aiofiles.ospath.isdir(entry_path))
+                                else {
+                                    "size": entry_path_stat.st_size,
+                                    "lastModified": entry_path_stat.st_mtime,
+                                    "lastMetadataChange": entry_path_stat.st_ctime,
+                                    "uri": self.config.service_url_base_path + f"/objects{rel_path}",
+                                }
+                            ),
+                        }
+                    )
 
         return tuple(sorted(entries, key=lambda e: e["name"]))
-
+    
+    def is_file_extension_included(self, entry:str, included_extensions:list[str] | None) -> bool:
+        if included_extensions is None:
+            return True
+        return any([entry.endswith(f".{extension}") for extension in included_extensions])
+    
     async def get_directory_tree(
             self, 
             ignore: list[str] | None = None,
