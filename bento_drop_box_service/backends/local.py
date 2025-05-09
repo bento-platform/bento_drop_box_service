@@ -40,12 +40,11 @@ class LocalBackend(DropBoxBackend):
                 if "/" in entry:
                     self.logger.warning(f"Skipped entry with a '/' in its name: {entry}")
                     continue
-
+                
                 entry_path = current_dir / entry
                 entry_path_stat = entry_path.stat()
 
                 rel_path = (f"/{sub_path_str}" if sub_path_str else "") + f"/{entry}"
-
                 if (await aiofiles.ospath.isdir(entry_path)) or self.is_passing_filter(entry, include, ignore):
                     entries.append(
                         {
