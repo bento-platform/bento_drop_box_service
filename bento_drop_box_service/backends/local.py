@@ -40,7 +40,7 @@ class LocalBackend(DropBoxBackend):
                 if "/" in entry:
                     self.logger.warning(f"Skipped entry with a '/' in its name: {entry}")
                     continue
-                
+
                 entry_path = current_dir / entry
                 entry_path_stat = entry_path.stat()
 
