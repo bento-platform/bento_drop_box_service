@@ -21,11 +21,13 @@ class LocalBackend(DropBoxBackend):
         sub_path: tuple[str, ...],
         level: int = 0,
         ignore: list[str] | None = None,
-        include: list[str] | None = None
+        include: list[str] | None = None,
     ) -> tuple[DropBoxEntry, ...]:
         if ignore is not None and include is not None:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Include only a single type of filter query parameters")
-        
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Include only a single type of filter query parameters"
+            )
+
         traversal_limit = self.config.traversal_limit
 
         root_path = root_path.absolute()
@@ -38,12 +40,12 @@ class LocalBackend(DropBoxBackend):
                 if "/" in entry:
                     self.logger.warning(f"Skipped entry with a '/' in its name: {entry}")
                     continue
-                
+
                 entry_path = current_dir / entry
                 entry_path_stat = entry_path.stat()
 
                 rel_path = (f"/{sub_path_str}" if sub_path_str else "") + f"/{entry}"
-                
+
                 if (await aiofiles.ospath.isdir(entry_path)) or self.is_passing_filter(entry, include, ignore):
                     entries.append(
                         {
@@ -68,8 +70,10 @@ class LocalBackend(DropBoxBackend):
                     )
 
         return tuple(sorted(entries, key=lambda e: e["name"]))
-    
-    def is_passing_filter(self, entry:str, included_extensions:list[str]|None, ignored_extensions:list[str]|None):
+
+    def is_passing_filter(
+        self, entry: str, included_extensions: list[str] | None, ignored_extensions: list[str] | None
+    ):
         if included_extensions is not None:
             return any([entry.endswith(f".{ext}") for ext in included_extensions])
         elif ignored_extensions is not None:
@@ -78,11 +82,11 @@ class LocalBackend(DropBoxBackend):
             return True
 
     async def get_directory_tree(
-            self, 
-            sub_path: str | None = None,
-            ignore: list[str] | None = None,
-            include: list[str] | None = None
-        , ) -> tuple[DropBoxEntry, ...]:
+        self,
+        sub_path: str | None = None,
+        ignore: list[str] | None = None,
+        include: list[str] | None = None,
+    ) -> tuple[DropBoxEntry, ...]:
         root_path: pathlib.Path = pathlib.Path(self.config.service_data)
         if sub_path:
             root_path = root_path.joinpath(sub_path)
