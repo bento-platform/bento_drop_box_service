@@ -72,13 +72,17 @@ class S3Backend(DropBoxBackend):
             current_level.append(new_file)
         return tree
 
-    async def get_directory_tree(self, sub_path: str | None = None, ignore: list[str] | None = None,
-        include: list[str] | None = None,) -> tuple[DropBoxEntry, ...]:
+    async def get_directory_tree(
+        self,
+        sub_path: str | None = None,
+        ignore: list[str] | None = None,
+        include: list[str] | None = None,
+    ) -> tuple[DropBoxEntry, ...]:
         if ignore is not None and include is not None:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Include only a single type of filter query parameters"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Include only a single type of filter query parameter"
             )
-        
+
         prefix = sub_path if sub_path else ""
         traversal_limit = self.config.traversal_limit
         async with await self._create_s3_client() as s3_client:
@@ -152,7 +156,7 @@ class S3Backend(DropBoxBackend):
         async with await self._create_s3_client() as s3_client:
             await s3_client.delete_object(Bucket=self.bucket_name, Key=path)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    
+
     def is_passing_filter(
         self, entry: str, included_extensions: list[str] | None, ignored_extensions: list[str] | None
     ):
