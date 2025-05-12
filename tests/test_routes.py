@@ -7,15 +7,26 @@ def validate_tree(res):
     assert "contents" in tree[1]
 
 
-def validate_empty_tree(res):
+def validate_subtree(res):
     tree = res.json()
 
     assert res.status_code == 200
-    assert len(tree) == 1
+    assert len(tree) == 3
+    assert tree[1]["name"] == "patate.txt"
     assert "contents" in tree[0]
-    assert tree[0]["name"] == "some_dir"
-    for dir in tree[0]["contents"]:
-        assert dir["contents"] == []
+    assert "contents" in tree[2]
+
+
+def validate_empty_tree(res, num_elements=1):
+    tree = res.json()
+
+    assert res.status_code == 200
+    assert len(tree) == num_elements
+
+    for element in range(num_elements):
+        assert "contents" in tree[element]
+        for dir in tree[element]["contents"]:
+            assert dir["contents"] == []
 
 
 def test_service_info(client_local):
@@ -38,6 +49,20 @@ def test_tree_local(client_local):
     validate_empty_tree(res)
 
     res = client_local.get("/tree?include=txt&ignore=json")
+    assert res.status_code == 400
+
+
+def test_tree_subpath_local(client_local):
+    res = client_local.get("/tree/some_dir")
+    validate_subtree(res)
+
+    res = client_local.get("/tree/some_dir?include=txt")
+    validate_subtree(res)
+
+    res = client_local.get("/tree/some_dir?ignore=txt")
+    validate_empty_tree(res, 2)
+
+    res = client_local.get("/tree/some_dir?include=txt&ignore=json")
     assert res.status_code == 400
 
 
