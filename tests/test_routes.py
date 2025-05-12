@@ -6,6 +6,16 @@ def validate_tree(res):
     assert tree[0]["name"] == "patate.txt"
     assert "contents" in tree[1]
 
+def validate_empty_tree(res):
+    tree = res.json()
+
+    assert res.status_code == 200
+    assert len(tree) == 1
+    assert "contents" in tree[0]
+    assert tree[0]["name"] == "some_dir"
+    for dir in tree[0]["contents"]:
+        assert dir["contents"] == []
+
 
 def test_service_info(client_local):
     res = client_local.get("/service-info")
@@ -19,6 +29,15 @@ def test_service_info(client_local):
 def test_tree_local(client_local):
     res = client_local.get("/tree")
     validate_tree(res)
+
+    res = client_local.get("/tree?include=txt")
+    validate_tree(res)
+
+    res = client_local.get("/tree?ignore=txt")
+    validate_empty_tree(res)
+
+    res = client_local.get("/tree?include=txt&ignore=json")
+    assert res.status_code == 400
 
 
 def test_object_download_local(client_local):
