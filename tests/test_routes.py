@@ -6,6 +6,7 @@ def validate_tree(res):
     assert tree[0]["name"] == "patate.txt"
     assert "contents" in tree[1]
 
+
 def validate_empty_tree(res):
     tree = res.json()
 
