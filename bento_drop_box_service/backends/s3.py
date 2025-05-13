@@ -10,6 +10,7 @@ from bento_lib.logging import log_level_from_str
 from .base import DropBoxEntry, DropBoxBackend
 from ..config import Config
 
+
 class S3Backend(DropBoxBackend):
     def __init__(self, config: Config, logger: logging.Logger):
         super().__init__(config, logger)
