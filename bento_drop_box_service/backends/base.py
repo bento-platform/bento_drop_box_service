@@ -58,9 +58,9 @@ class DropBoxBackend(ABC):
     def is_passing_filter(
         self, entry: str, included_extensions: list[str] | None, ignored_extensions: list[str] | None
     ):
-        if included_extensions is not None:
+        if included_extensions:
             return any([entry.endswith(f".{ext}") for ext in included_extensions])
-        elif ignored_extensions is not None:
+        elif ignored_extensions:
             return not any([entry.endswith(f".{ext}") for ext in ignored_extensions])
         else:
             return True
