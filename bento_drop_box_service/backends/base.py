@@ -54,3 +54,13 @@ class DropBoxBackend(ABC):
     @abstractmethod
     async def delete_at_path(self, path: str) -> None:  # pragma: no cover
         pass
+    
+    def is_passing_filter(
+        self, entry: str, included_extensions: list[str] | None, ignored_extensions: list[str] | None
+    ):
+        if included_extensions is not None:
+            return any([entry.endswith(f".{ext}") for ext in included_extensions])
+        elif ignored_extensions is not None:
+            return not any([entry.endswith(f".{ext}") for ext in ignored_extensions])
+        else:
+            return True
