@@ -23,7 +23,7 @@ class LocalBackend(DropBoxBackend):
         ignore: list[str] | None = None,
         include: list[str] | None = None,
     ) -> tuple[DropBoxEntry, ...]:
-        if ignore is not None and include is not None:
+        if ignore and include:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Include only a single type of filter query parameter"
             )
@@ -69,16 +69,6 @@ class LocalBackend(DropBoxBackend):
                     )
 
         return tuple(sorted(entries, key=lambda e: e["name"]))
-
-    def is_passing_filter(
-        self, entry: str, included_extensions: list[str] | None, ignored_extensions: list[str] | None
-    ):
-        if included_extensions is not None:
-            return any([entry.endswith(f".{ext}") for ext in included_extensions])
-        elif ignored_extensions is not None:
-            return not any([entry.endswith(f".{ext}") for ext in ignored_extensions])
-        else:
-            return True
 
     async def get_directory_tree(
         self,
