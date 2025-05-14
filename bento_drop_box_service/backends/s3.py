@@ -6,6 +6,7 @@ from fastapi import HTTPException, status
 from fastapi.requests import Request
 from starlette.responses import Response, StreamingResponse
 from werkzeug.utils import secure_filename
+from bento_lib.logging import log_level_from_str
 
 from .base import DropBoxEntry, DropBoxBackend
 from ..config import Config
@@ -14,7 +15,9 @@ from ..config import Config
 class S3Backend(DropBoxBackend):
     def __init__(self, config: Config, logger: logging.Logger):
         super().__init__(config, logger)
-
+        logging.getLogger("boto3").setLevel(log_level_from_str(config.log_level))
+        logging.getLogger("botocore").setLevel(log_level_from_str(config.log_level))
+        logging.getLogger("aiobotocore").setLevel(log_level_from_str(config.log_level))
         protocol = "https" if config.s3_use_https else "http"
         endpoint_url = f"{protocol}://{config.s3_endpoint}"
 
