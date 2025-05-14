@@ -1,6 +1,7 @@
 from fastapi import Response
 from fastapi.testclient import TestClient
 
+
 def validate_tree(res: Response):
     tree = res.json()
 
