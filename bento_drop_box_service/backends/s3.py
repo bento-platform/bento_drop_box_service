@@ -1,6 +1,7 @@
 import aioboto3
 import logging
 
+import aioboto3.resources
 from fastapi import status
 from fastapi.requests import Request
 from starlette.responses import Response, StreamingResponse
@@ -74,7 +75,14 @@ class S3Backend(DropBoxBackend):
             current_level.append(new_file)
         return tree
 
-    async def get_directory_tree(self, sub_path: str | None = None) -> tuple[DropBoxEntry, ...]:
+    async def get_directory_tree(
+        self,
+        sub_path: str | None = None,
+        ignore: list[str] | None = None,
+        include: list[str] | None = None,
+    ) -> tuple[DropBoxEntry, ...]:
+        self.validate_filters(include, ignore)
+
         prefix = sub_path if sub_path else ""
         traversal_limit = self.config.traversal_limit
         async with await self._create_s3_client() as s3_client:
@@ -92,17 +100,19 @@ class S3Backend(DropBoxBackend):
                     if key.count("/") > traversal_limit:
                         self.logger.warning(f"Object key {key} violates traversal limit {traversal_limit}")
                         continue
-                    last_modified = obj["LastModified"].timestamp()
-                    entry = {
-                        "name": key.split("/")[-1],
-                        "filePath": key,
-                        "relativePath": key,
-                        "size": obj["Size"],
-                        "lastModified": last_modified,
-                        "lastMetadataChange": last_modified,
-                        "uri": f"{self.config.service_url_base_path}/objects/{key}",
-                    }
-                    files_list.append(entry)
+
+                    if self.is_passing_filter(key, include, ignore):
+                        last_modified = obj["LastModified"].timestamp()
+                        entry = {
+                            "name": key.split("/")[-1],
+                            "filePath": key,
+                            "relativePath": key,
+                            "size": obj["Size"],
+                            "lastModified": last_modified,
+                            "lastMetadataChange": last_modified,
+                            "uri": f"{self.config.service_url_base_path}/objects/{key}",
+                        }
+                        files_list.append(entry)
 
         return tuple(self.create_directory_tree(files_list))
 

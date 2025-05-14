@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from fastapi import Request, Response
+from fastapi import HTTPException, Request, Response, status
 from typing import TypedDict
 
 from ..config import Config
@@ -35,7 +35,12 @@ class DropBoxBackend(ABC):
         return self._logger
 
     @abstractmethod
-    async def get_directory_tree(self, sub_path: str | None = None) -> tuple[DropBoxEntry, ...]:  # pragma: no cover
+    async def get_directory_tree(
+        self,
+        sub_path: str | None = None,
+        ignore: list[str] | None = None,
+        include: list[str] | None = None,
+    ) -> tuple[DropBoxEntry, ...]:  # pragma: no cover
         pass
 
     @abstractmethod
@@ -49,3 +54,19 @@ class DropBoxBackend(ABC):
     @abstractmethod
     async def delete_at_path(self, path: str) -> None:  # pragma: no cover
         pass
+
+    def is_passing_filter(
+        self, entry: str, included_extensions: list[str] | None, ignored_extensions: list[str] | None
+    ):
+        if included_extensions:
+            return any([entry.endswith(ext) for ext in included_extensions])
+        elif ignored_extensions:
+            return not any([entry.endswith(ext) for ext in ignored_extensions])
+        else:
+            return True
+
+    def validate_filters(self, include: list[str] | None, ignore: list[str] | None):
+        if ignore and include:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Include only a single type of filter query parameter"
+            )
