@@ -5,7 +5,7 @@ def validate_tree(res:Response):
     tree = res.json()
 
     assert res.status_code == 200
-    assert len(tree) == 2
+    assert len(tree) == 4
     assert tree[0]["name"] == "patate.txt"
     assert "contents" in tree[1]
 
@@ -14,22 +14,24 @@ def validate_subtree(res:Response):
     tree = res.json()
 
     assert res.status_code == 200
-    assert len(tree) == 3
+    assert len(tree) == 5
     assert tree[1]["name"] == "patate.txt"
     assert "contents" in tree[0]
     assert "contents" in tree[2]
 
-
-def validate_empty_tree(res:Response, num_elements:int = 1):
+def validate_filtered_tree(res:Response, expected_present_files:list[str], expected_dirs=1):
     tree = res.json()
 
     assert res.status_code == 200
-    assert len(tree) == num_elements
+    assert len(tree) == expected_dirs + len(expected_present_files)
 
-    for element in range(num_elements):
-        assert "contents" in tree[element]
-        for dir in tree[element]["contents"]:
-            assert dir["contents"] == []
+    for index in range(len(expected_present_files)):
+        assert tree[index+expected_dirs]["name"] == expected_present_files[index]
+    
+    for dir in tree[0]["contents"]:
+        assert dir["name"] in expected_present_files or "empty_dir"
+
+
 
 
 def test_service_info(client_local:Config):
@@ -45,11 +47,17 @@ def test_tree_local(client_local:Config):
     res = client_local.get("/tree")
     validate_tree(res)
 
-    res = client_local.get("/tree?include=txt")
-    validate_tree(res)
+    res = client_local.get("/tree?include=json")
+    validate_filtered_tree(res, ["zucchini.json"])
+
+    res = client_local.get("/tree?include=json&include=.vcf")
+    validate_filtered_tree(res, ["tomate.vcf", "zucchini.json"])
 
     res = client_local.get("/tree?ignore=txt")
-    validate_empty_tree(res)
+    validate_filtered_tree(res, ["tomate.vcf", "zucchini.json"])
+
+    res = client_local.get("/tree?ignore=txt&ignore=.json&ignore=.vcf")
+    validate_filtered_tree(res, [])
 
     res = client_local.get("/tree?include=txt&ignore=json")
     assert res.status_code == 400
@@ -59,11 +67,11 @@ def test_tree_subpath_local(client_local:Config):
     res = client_local.get("/tree/some_dir")
     validate_subtree(res)
 
-    res = client_local.get("/tree/some_dir?include=txt")
-    validate_subtree(res)
+    res = client_local.get("/tree/some_dir?include=json")
+    validate_filtered_tree(res, ["zucchini.json"], 2)
 
     res = client_local.get("/tree/some_dir?ignore=txt")
-    validate_empty_tree(res, 2)
+    validate_filtered_tree(res, ["tomate.vcf", "zucchini.json"], 2)
 
     res = client_local.get("/tree/some_dir?include=txt&ignore=json")
     assert res.status_code == 400
