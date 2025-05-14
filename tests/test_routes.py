@@ -19,17 +19,17 @@ def validate_subtree(res:Response):
     assert "contents" in tree[0]
     assert "contents" in tree[2]
 
-def validate_filtered_tree(res:Response, expected_present_files:list[str], expected_dirs=1):
+def validate_filtered_tree(res:Response, expected_files:list[str], num_directories:int=1):
     tree = res.json()
 
     assert res.status_code == 200
-    assert len(tree) == expected_dirs + len(expected_present_files)
+    assert len(tree) == num_directories + len(expected_files)
 
-    for index in range(len(expected_present_files)):
-        assert tree[index+expected_dirs]["name"] == expected_present_files[index]
+    for index in range(len(expected_files)):
+        assert tree[index+num_directories]["name"] == expected_files[index]
     
     for dir in tree[0]["contents"]:
-        assert dir["name"] in expected_present_files or "empty_dir"
+        assert dir["name"] in expected_files or "empty_dir"
 
 
 
