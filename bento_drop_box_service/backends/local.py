@@ -23,10 +23,7 @@ class LocalBackend(DropBoxBackend):
         ignore: list[str] | None = None,
         include: list[str] | None = None,
     ) -> tuple[DropBoxEntry, ...]:
-        if ignore and include:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Include only a single type of filter query parameter"
-            )
+        self.validate_filters(include, ignore)
 
         traversal_limit = self.config.traversal_limit
 
