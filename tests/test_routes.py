@@ -1,6 +1,5 @@
 from fastapi import Response
-from bento_drop_box_service.config import Config
-
+from fastapi.testclient import TestClient
 
 def validate_tree(res: Response):
     tree = res.json()
@@ -34,7 +33,7 @@ def validate_filtered_tree(res: Response, expected_files: list[str], num_directo
         assert dir["name"] in expected_files or "empty_dir"
 
 
-def test_service_info(client_local: Config):
+def test_service_info(client_local: TestClient):
     res = client_local.get("/service-info")
     data = res.json()
 
@@ -43,7 +42,7 @@ def test_service_info(client_local: Config):
     assert "type" in data
 
 
-def test_tree_local(client_local: Config):
+def test_tree_local(client_local: TestClient):
     res = client_local.get("/tree")
     validate_tree(res)
 
@@ -63,7 +62,7 @@ def test_tree_local(client_local: Config):
     assert res.status_code == 400
 
 
-def test_tree_subpath_local(client_local: Config):
+def test_tree_subpath_local(client_local: TestClient):
     res = client_local.get("/tree/some_dir")
     validate_subtree(res)
 
@@ -77,7 +76,7 @@ def test_tree_subpath_local(client_local: Config):
     assert res.status_code == 400
 
 
-def test_object_download_local(client_local: Config):
+def test_object_download_local(client_local: TestClient):
     res = client_local.get("/objects/patate.txt")
     assert res.status_code == 200
 
@@ -91,7 +90,7 @@ def test_object_download_local(client_local: Config):
     assert res.status_code == 200
 
 
-def test_object_download_local_404(client_local: Config):
+def test_object_download_local_404(client_local: TestClient):
     res = client_local.get("/objects/peel.txt")
     assert res.status_code == 404
 
@@ -102,11 +101,11 @@ def test_object_download_local_404(client_local: Config):
     assert res.status_code == 404
 
 
-def test_object_download_local_file_as_dir(client_local: Config):
+def test_object_download_local_file_as_dir(client_local: TestClient):
     res = client_local.get("/objects/patate.txt/tuber")
     assert res.status_code == 400
 
 
-def test_folder_download_error_local(client_local: Config):
+def test_folder_download_error_local(client_local: TestClient):
     res = client_local.get("/objects/some_dir/")
     assert res.status_code == 400
