@@ -2,7 +2,7 @@ import aioboto3
 import logging
 
 import aioboto3.resources
-from fastapi import HTTPException, status
+from fastapi import status
 from fastapi.requests import Request
 from starlette.responses import Response, StreamingResponse
 from werkzeug.utils import secure_filename

@@ -22,18 +22,26 @@ authz_delete_dependency = authz_middleware.dep_require_permissions_on_resource(f
 @drop_box_router.get("/tree", dependencies=(authz_view_dependency,))
 async def drop_box_tree(
     backend: BackendDependency,
-    include: Annotated[list[str] | None, Query(description="Filer Query Parameter (Optional): File extensions to include in tree")] = None,
-    ignore: Annotated[list[str] | None, Query(description="Filer Query Parameter (Optional): File extensions to exclude from tree")] = None,
+    include: Annotated[
+        list[str] | None, Query(description="Filer Query Parameter (Optional): File extensions to include in tree")
+    ] = None,
+    ignore: Annotated[
+        list[str] | None, Query(description="Filer Query Parameter (Optional): File extensions to exclude from tree")
+    ] = None,
 ) -> Response:
-        return JSONResponse(await backend.get_directory_tree(include=include, ignore=ignore))
+    return JSONResponse(await backend.get_directory_tree(include=include, ignore=ignore))
 
 
 @drop_box_router.get("/tree/{path:path}", dependencies=(authz_view_dependency,))
 async def drop_box_subtree(
     backend: BackendDependency,
     path: str | None,
-    include: Annotated[list[str] | None, Query(description="Filer Query Parameter (Optional): File extensions to include in tree")] = None,
-    ignore: Annotated[list[str] | None, Query(description="Filer Query Parameter (Optional): File extensions to exclude from tree")] = None,
+    include: Annotated[
+        list[str] | None, Query(description="Filer Query Parameter (Optional): File extensions to include in tree")
+    ] = None,
+    ignore: Annotated[
+        list[str] | None, Query(description="Filer Query Parameter (Optional): File extensions to exclude from tree")
+    ] = None,
 ) -> Response:
     # Same as /tree endpoint, but accepts a subpath in order to return a directory sub-tree.
     # Useful to download files for WES workflows that take a directory input.

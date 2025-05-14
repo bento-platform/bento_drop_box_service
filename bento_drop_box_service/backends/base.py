@@ -64,7 +64,7 @@ class DropBoxBackend(ABC):
             return not any([entry.endswith(f"{ext}") for ext in ignored_extensions])
         else:
             return True
-        
+
     def validate_filters(self, include: list[str] | None, ignore: list[str] | None):
         if ignore and include:
             raise HTTPException(
