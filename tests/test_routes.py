@@ -1,4 +1,7 @@
-def validate_tree(res):
+from fastapi import Response
+from bento_drop_box_service.config import Config
+
+def validate_tree(res:Response):
     tree = res.json()
 
     assert res.status_code == 200
@@ -7,7 +10,7 @@ def validate_tree(res):
     assert "contents" in tree[1]
 
 
-def validate_subtree(res):
+def validate_subtree(res:Response):
     tree = res.json()
 
     assert res.status_code == 200
@@ -17,7 +20,7 @@ def validate_subtree(res):
     assert "contents" in tree[2]
 
 
-def validate_empty_tree(res, num_elements=1):
+def validate_empty_tree(res:Response, num_elements:int = 1):
     tree = res.json()
 
     assert res.status_code == 200
@@ -29,7 +32,7 @@ def validate_empty_tree(res, num_elements=1):
             assert dir["contents"] == []
 
 
-def test_service_info(client_local):
+def test_service_info(client_local:Config):
     res = client_local.get("/service-info")
     data = res.json()
 
@@ -38,7 +41,7 @@ def test_service_info(client_local):
     assert "type" in data
 
 
-def test_tree_local(client_local):
+def test_tree_local(client_local:Config):
     res = client_local.get("/tree")
     validate_tree(res)
 
@@ -52,7 +55,7 @@ def test_tree_local(client_local):
     assert res.status_code == 400
 
 
-def test_tree_subpath_local(client_local):
+def test_tree_subpath_local(client_local:Config):
     res = client_local.get("/tree/some_dir")
     validate_subtree(res)
 
@@ -66,7 +69,7 @@ def test_tree_subpath_local(client_local):
     assert res.status_code == 400
 
 
-def test_object_download_local(client_local):
+def test_object_download_local(client_local:Config):
     res = client_local.get("/objects/patate.txt")
     assert res.status_code == 200
 
@@ -80,7 +83,7 @@ def test_object_download_local(client_local):
     assert res.status_code == 200
 
 
-def test_object_download_local_404(client_local):
+def test_object_download_local_404(client_local:Config):
     res = client_local.get("/objects/peel.txt")
     assert res.status_code == 404
 
@@ -91,11 +94,11 @@ def test_object_download_local_404(client_local):
     assert res.status_code == 404
 
 
-def test_object_download_local_file_as_dir(client_local):
+def test_object_download_local_file_as_dir(client_local:Config):
     res = client_local.get("/objects/patate.txt/tuber")
     assert res.status_code == 400
 
 
-def test_folder_download_error_local(client_local):
+def test_folder_download_error_local(client_local:Config):
     res = client_local.get("/objects/some_dir/")
     assert res.status_code == 400
