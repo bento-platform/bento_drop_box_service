@@ -23,10 +23,10 @@ authz_delete_dependency = authz_middleware.dep_require_permissions_on_resource(f
 async def drop_box_tree(
     backend: BackendDependency,
     include: Annotated[
-        list[str] | None, Query(description="Filer Query Parameter (Optional): File extensions to include in tree")
+        list[str] | None, Query(description="Filter Query Parameter (Optional): File extensions to include in tree")
     ] = None,
     ignore: Annotated[
-        list[str] | None, Query(description="Filer Query Parameter (Optional): File extensions to exclude from tree")
+        list[str] | None, Query(description="Filter Query Parameter (Optional): File extensions to exclude from tree")
     ] = None,
 ) -> Response:
     return JSONResponse(await backend.get_directory_tree(include=include, ignore=ignore))
@@ -37,10 +37,10 @@ async def drop_box_subtree(
     backend: BackendDependency,
     path: str | None,
     include: Annotated[
-        list[str] | None, Query(description="Filer Query Parameter (Optional): File extensions to include in tree")
+        list[str] | None, Query(description="Filter Query Parameter (Optional): File extensions to include in tree")
     ] = None,
     ignore: Annotated[
-        list[str] | None, Query(description="Filer Query Parameter (Optional): File extensions to exclude from tree")
+        list[str] | None, Query(description="Filter Query Parameter (Optional): File extensions to exclude from tree")
     ] = None,
 ) -> Response:
     # Same as /tree endpoint, but accepts a subpath in order to return a directory sub-tree.
