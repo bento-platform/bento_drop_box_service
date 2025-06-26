@@ -26,8 +26,7 @@ application = BentoFastAPI(authz_middleware, config_for_setup, logger, BENTO_SER
 application.include_router(drop_box_router)
 
 # Backend init logs
-backend = "S3" if config_for_setup.use_s3_backend else "local"
-logger.info(f"Using {backend} storage backend")
+logger.info(f"Using {'S3' if config_for_setup.use_s3_backend else 'local'} storage backend")
 
 if config_for_setup.use_s3_backend:
     logger.info(f"S3 endpoint: {config_for_setup.s3_endpoint}")

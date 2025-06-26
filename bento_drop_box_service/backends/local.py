@@ -139,7 +139,7 @@ class LocalBackend(DropBoxBackend):
                         status_code=status.HTTP_400_BAD_REQUEST, detail=f"{node['name']} is not a directory"
                     )
 
-                directory_items = node["contents"]
+                directory_items = tuple(node["contents"])
                 # Go around another iteration, nesting into this directory
 
             except StopIteration:

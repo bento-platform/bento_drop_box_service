@@ -18,7 +18,7 @@ class DropBoxEntry(TypedDict, total=False):
     size: int
     lastModified: float
     lastMetadataChange: float
-    contents: tuple["DropBoxEntry", ...]
+    contents: list["DropBoxEntry"]
 
 
 class DropBoxBackend(ABC):
@@ -55,9 +55,8 @@ class DropBoxBackend(ABC):
     async def delete_at_path(self, path: str) -> None:  # pragma: no cover
         pass
 
-    def is_passing_filter(
-        self, entry: str, included_extensions: list[str] | None, ignored_extensions: list[str] | None
-    ):
+    @staticmethod
+    def is_passing_filter(entry: str, included_extensions: list[str] | None, ignored_extensions: list[str] | None):
         if included_extensions:
             return any([entry.endswith(ext) for ext in included_extensions])
         elif ignored_extensions:
@@ -65,7 +64,8 @@ class DropBoxBackend(ABC):
         else:
             return True
 
-    def validate_filters(self, include: list[str] | None, ignore: list[str] | None):
+    @staticmethod
+    def validate_filters(include: list[str] | None, ignore: list[str] | None):
         if ignore and include:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Include only a single type of filter query parameter"
