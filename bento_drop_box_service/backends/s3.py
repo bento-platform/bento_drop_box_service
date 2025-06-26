@@ -108,22 +108,25 @@ class S3Backend(DropBoxBackend):
 
                 for obj in page["Contents"]:
                     key = obj["Key"]
+
                     if key.count("/") > traversal_limit:
                         self.logger.warning(f"Object key {key} violates traversal limit {traversal_limit}")
                         continue
 
-                    if self.is_passing_filter(key, include, ignore):
-                        last_modified = obj["LastModified"].timestamp()
-                        entry: DropBoxEntry = {
-                            "name": key.split("/")[-1],
-                            "filePath": key,
-                            "relativePath": key,
-                            "size": obj["Size"],
-                            "lastModified": last_modified,
-                            "lastMetadataChange": last_modified,
-                            "uri": f"{self.config.service_url_base_path}/objects/{key}",
-                        }
-                        files_list.append(entry)
+                    if not self.is_passing_filter(key, include, ignore):
+                        continue
+
+                    last_modified = obj["LastModified"].timestamp()
+                    entry: DropBoxEntry = {
+                        "name": key.split("/")[-1],
+                        "filePath": key,
+                        "relativePath": key,
+                        "size": obj["Size"],
+                        "lastModified": last_modified,
+                        "lastMetadataChange": last_modified,
+                        "uri": f"{self.config.service_url_base_path}/objects/{key}",
+                    }
+                    files_list.append(entry)
 
         return tuple(self.create_directory_tree(files_list))
 
