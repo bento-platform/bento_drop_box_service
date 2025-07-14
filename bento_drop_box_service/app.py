@@ -20,8 +20,13 @@ BENTO_SERVICE_INFO: BentoExtraServiceInfo = {
 
 # TODO: Find a way to DI this
 config_for_setup = get_config()
+logger = get_logger(config_for_setup)
 
-application = BentoFastAPI(
-    authz_middleware, config_for_setup, get_logger(config_for_setup), BENTO_SERVICE_INFO, SERVICE_TYPE, __version__
-)
+application = BentoFastAPI(authz_middleware, config_for_setup, logger, BENTO_SERVICE_INFO, SERVICE_TYPE, __version__)
 application.include_router(drop_box_router)
+
+# Backend init logs
+logger.info(f"Using {'S3' if config_for_setup.use_s3_backend else 'local'} storage backend")
+
+if config_for_setup.use_s3_backend:
+    logger.info(f"S3 endpoint: {config_for_setup.s3_endpoint}")
