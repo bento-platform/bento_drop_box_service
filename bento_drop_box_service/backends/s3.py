@@ -16,9 +16,10 @@ class S3Backend(DropBoxBackend):
         super().__init__(config, logger)
 
         # Sync log levels for boto-related loggers with configured log level:
-        logging.getLogger("boto3").setLevel(log_level_from_str(config.log_level))
-        logging.getLogger("botocore").setLevel(log_level_from_str(config.log_level))
-        logging.getLogger("aiobotocore").setLevel(log_level_from_str(config.log_level))
+        log_level = log_level_from_str(config.log_level)
+        logging.getLogger("boto3").setLevel(log_level)
+        logging.getLogger("botocore").setLevel(log_level)
+        logging.getLogger("aiobotocore").setLevel(log_level)
 
         protocol = "https" if config.s3_use_https else "http"
         endpoint_url = f"{protocol}://{config.s3_endpoint}"
