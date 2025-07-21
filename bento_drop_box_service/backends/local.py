@@ -20,7 +20,11 @@ class LocalBackend(DropBoxBackend):
         root_path: pathlib.Path,
         sub_path: tuple[str, ...],
         level: int = 0,
+        ignore: list[str] | None = None,
+        include: list[str] | None = None,
     ) -> tuple[DropBoxEntry, ...]:
+        self.validate_filters(include, ignore)
+
         traversal_limit = self.config.traversal_limit
 
         root_path = root_path.absolute()
@@ -39,6 +43,10 @@ class LocalBackend(DropBoxBackend):
 
                 rel_path = (f"/{sub_path_str}" if sub_path_str else "") + f"/{entry}"
 
+                if not ((await aiofiles.ospath.isdir(entry_path)) or self.is_passing_filter(entry, include, ignore)):
+                    # If neither of these conditions is true, we should skip this entry in the tree
+                    continue
+
                 entries.append(
                     {
                         "name": entry,
@@ -47,7 +55,7 @@ class LocalBackend(DropBoxBackend):
                         **(
                             {
                                 "contents": await self._get_directory_tree(
-                                    root_path, (*sub_path, entry), level=level + 1
+                                    root_path, (*sub_path, entry), level=level + 1, ignore=ignore, include=include
                                 ),
                             }
                             if (await aiofiles.ospath.isdir(entry_path))
@@ -63,9 +71,21 @@ class LocalBackend(DropBoxBackend):
 
         return tuple(sorted(entries, key=lambda e: e["name"]))
 
-    async def get_directory_tree(self) -> tuple[DropBoxEntry, ...]:
+    async def get_directory_tree(
+        self,
+        sub_path: str | None = None,
+        ignore: list[str] | None = None,
+        include: list[str] | None = None,
+    ) -> tuple[DropBoxEntry, ...]:
         root_path: pathlib.Path = pathlib.Path(self.config.service_data)
-        return await self._get_directory_tree(root_path, ())
+        if sub_path:
+            root_path = root_path.joinpath(sub_path)
+
+        if not str(root_path.absolute()).startswith(self.config.service_data):
+            # Only accept requests that are under the data volume
+            self.logger.warning(f"attempted to get directory tree outside of drop box data volume: {root_path}")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot inspect provided sub tree")
+        return await self._get_directory_tree(root_path, (), include=include, ignore=ignore)
 
     async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:
         sd = self.config.service_data
@@ -123,7 +143,7 @@ class LocalBackend(DropBoxBackend):
                         status_code=status.HTTP_400_BAD_REQUEST, detail=f"{node['name']} is not a directory"
                     )
 
-                directory_items = node["contents"]
+                directory_items = tuple(node["contents"])
                 # Go around another iteration, nesting into this directory
 
             except StopIteration:
