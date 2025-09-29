@@ -4,7 +4,6 @@ from bento_drop_box_service.backends.base import DropBoxEntry
 
 
 def validate_tree(tree: list[DropBoxEntry]):
-
     assert len(tree) == 4
     root_expected_names = ["tomate.vcf", "zucchini.json", "patate.txt", "some_dir"]
     some_dir_expected_names = ["tomate.vcf", "zucchini.json", "patate.txt", "some_other_dir", "empty_dir"]
