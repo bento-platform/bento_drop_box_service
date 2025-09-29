@@ -42,10 +42,21 @@ class LocalBackend(DropBoxBackend):
                 entry_path_stat = entry_path.stat()
 
                 rel_path = (f"/{sub_path_str}" if sub_path_str else "") + f"/{entry}"
+                is_directory = await aiofiles.ospath.isdir(entry_path)
 
-                if not ((await aiofiles.ospath.isdir(entry_path)) or self.is_passing_filter(entry, include, ignore)):
+                if not (is_directory or self.is_passing_filter(entry, include, ignore)):
                     # If neither of these conditions is true, we should skip this entry in the tree
                     continue
+
+                # recurse on directories
+                if is_directory:
+                    contents = await self._get_directory_tree(
+                        root_path, (*sub_path, entry), level=level + 1, ignore=ignore, include=include
+                    )
+
+                    # if using ignore or include, skip empty directories
+                    if not contents and bool(ignore or include):
+                        continue
 
                 entries.append(
                     {
@@ -54,11 +65,9 @@ class LocalBackend(DropBoxBackend):
                         "relativePath": rel_path,  # Path relative to root of drop box (/)
                         **(
                             {
-                                "contents": await self._get_directory_tree(
-                                    root_path, (*sub_path, entry), level=level + 1, ignore=ignore, include=include
-                                ),
+                                "contents": contents,
                             }
-                            if (await aiofiles.ospath.isdir(entry_path))
+                            if is_directory
                             else {
                                 "size": entry_path_stat.st_size,
                                 "lastModified": entry_path_stat.st_mtime,
