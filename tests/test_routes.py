@@ -1,4 +1,3 @@
-from fastapi import Response
 from fastapi.testclient import TestClient
 from bento_drop_box_service.backends.base import DropBoxEntry
 
