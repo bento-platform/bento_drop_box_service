@@ -22,7 +22,7 @@ class LocalBackend(DropBoxBackend):
         level: int = 0,
         ignore: list[str] | None = None,
         include: list[str] | None = None,
-    ) -> tuple[DropBoxEntry, ...]:
+    ) -> list[DropBoxEntry]:
         self.validate_filters(include, ignore)
 
         traversal_limit = self.config.traversal_limit
@@ -32,44 +32,59 @@ class LocalBackend(DropBoxBackend):
         sub_path_str: str = "/".join(sub_path)
         current_dir = (root_path / sub_path_str).absolute() if sub_path_str else root_path.absolute()
         # noinspection PyUnresolvedReferences
-        for entry in await aiofiles.os.listdir(current_dir):
-            if (level < traversal_limit or not (await aiofiles.ospath.isdir(current_dir))) and entry[0] != ".":
-                if "/" in entry:
-                    self.logger.warning(f"Skipped entry with a '/' in its name: {entry}")
+        for entry_name in await aiofiles.os.listdir(current_dir):
+            entry_path = current_dir / entry_name
+            relative_path = (f"/{sub_path_str}" if sub_path_str else "") + f"/{entry_name}"
+            is_directory = await aiofiles.ospath.isdir(entry_path)
+
+            if level > traversal_limit:
+                self.logger.warning(f"Exceeded traversal limit of {traversal_limit} generating directory tree")
+                continue
+
+            if entry_name[0] == ".":
+                # skip dotfiles & hidden directories
+                continue
+
+            if "/" in entry_name:
+                self.logger.warning(f"Skipped entry with a '/' in its name: {entry_name}")
+                continue
+
+            if not (is_directory or self.is_passing_filter(entry_name, include, ignore)):
+                # If neither of these conditions is true, we should skip this entry in the tree
+                continue
+
+            # info for all entries
+            entry: DropBoxEntry = {
+                "name": entry_name,
+                "filePath": str(entry_path),  # Actual path on file system
+                "relativePath": relative_path,  # Path relative to root of drop box (/)
+            }
+
+            # recurse if directory
+            if is_directory:
+                entry["contents"] = await self._get_directory_tree(
+                    root_path, (*sub_path, entry_name), level=level + 1, ignore=ignore, include=include
+                )
+
+                # if using ignore or include, skip empty directories
+                if not entry["contents"] and bool(ignore or include):
                     continue
 
-                entry_path = current_dir / entry
+            # else file entry
+            else:
                 entry_path_stat = entry_path.stat()
-
-                rel_path = (f"/{sub_path_str}" if sub_path_str else "") + f"/{entry}"
-
-                if not ((await aiofiles.ospath.isdir(entry_path)) or self.is_passing_filter(entry, include, ignore)):
-                    # If neither of these conditions is true, we should skip this entry in the tree
-                    continue
-
-                entries.append(
+                entry.update(
                     {
-                        "name": entry,
-                        "filePath": str(entry_path),  # Actual path on file system
-                        "relativePath": rel_path,  # Path relative to root of drop box (/)
-                        **(
-                            {
-                                "contents": await self._get_directory_tree(
-                                    root_path, (*sub_path, entry), level=level + 1, ignore=ignore, include=include
-                                ),
-                            }
-                            if (await aiofiles.ospath.isdir(entry_path))
-                            else {
-                                "size": entry_path_stat.st_size,
-                                "lastModified": entry_path_stat.st_mtime,
-                                "lastMetadataChange": entry_path_stat.st_ctime,
-                                "uri": self.config.service_url_base_path + f"/objects{rel_path}",
-                            }
-                        ),
+                        "size": entry_path_stat.st_size,
+                        "lastModified": entry_path_stat.st_mtime,
+                        "lastMetadataChange": entry_path_stat.st_ctime,
+                        "uri": self.config.service_url_base_path + f"/objects{relative_path}",
                     }
                 )
 
-        return tuple(sorted(entries, key=lambda e: e["name"]))
+            entries.append(entry)
+
+        return sorted(entries, key=lambda e: e["name"])
 
     async def get_directory_tree(
         self,
@@ -85,7 +100,7 @@ class LocalBackend(DropBoxBackend):
             # Only accept requests that are under the data volume
             self.logger.warning(f"attempted to get directory tree outside of drop box data volume: {root_path}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot inspect provided sub tree")
-        return await self._get_directory_tree(root_path, (), include=include, ignore=ignore)
+        return tuple(await self._get_directory_tree(root_path, (), include=include, ignore=ignore))
 
     async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:
         sd = self.config.service_data
