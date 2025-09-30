@@ -37,7 +37,11 @@ class LocalBackend(DropBoxBackend):
             relative_path = (f"/{sub_path_str}" if sub_path_str else "") + f"/{entry_name}"
             is_directory = await aiofiles.ospath.isdir(entry_path)
 
-            if not ((level < traversal_limit or not is_directory) and entry_name[0] != "."):
+            if level > traversal_limit:
+                continue
+
+            if entry_name[0] == ".":
+                # skip dotfiles & hidden directories
                 continue
 
             if "/" in entry_name:
