@@ -38,7 +38,7 @@ class LocalBackend(DropBoxBackend):
             is_directory = await aiofiles.ospath.isdir(entry_path)
 
             if level > traversal_limit:
-                self.logger.warning(f"Reached traversal limit of {traversal_limit} generating directory tree")
+                self.logger.warning(f"Exceeded traversal limit of {traversal_limit} generating directory tree")
                 continue
 
             if entry_name[0] == ".":
