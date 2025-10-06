@@ -93,14 +93,20 @@ class LocalBackend(DropBoxBackend):
         include: list[str] | None = None,
     ) -> tuple[DropBoxEntry, ...]:
         root_path: pathlib.Path = pathlib.Path(self.config.service_data)
-        if sub_path:
-            root_path = root_path.joinpath(sub_path)
 
         if not str(root_path.absolute()).startswith(self.config.service_data):
             # Only accept requests that are under the data volume
             self.logger.warning(f"attempted to get directory tree outside of drop box data volume: {root_path}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot inspect provided sub tree")
-        return tuple(await self._get_directory_tree(root_path, (), include=include, ignore=ignore))
+
+        return tuple(
+            await self._get_directory_tree(
+                root_path,
+                tuple(sub_path.split("/")) if sub_path else (),
+                include=include,
+                ignore=ignore,
+            )
+        )
 
     async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:
         sd = self.config.service_data
