@@ -72,7 +72,7 @@ class LocalBackend(DropBoxBackend):
 
             # else file entry
             else:
-                entry_path_stat = entry_path.stat()
+                entry_path_stat = await aiofiles.os.stat(entry_path)
                 entry.update(
                     {
                         "size": entry_path_stat.st_size,
@@ -118,11 +118,11 @@ class LocalBackend(DropBoxBackend):
             self.logger.warning(f"attempted upload to path outside of drop box: {rp}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot upload outside of the drop box")
 
-        if os.path.exists(upload_path):
+        if await aiofiles.ospath.exists(upload_path):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot upload to an existing path")
 
         try:
-            os.makedirs(os.path.dirname(upload_path), exist_ok=True)
+            await aiofiles.os.makedirs(os.path.dirname(upload_path), exist_ok=True)
         except FileNotFoundError:  # blank dirname
             pass
 
