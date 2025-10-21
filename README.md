@@ -4,11 +4,11 @@
 ![Lint Status](https://github.com/bento-platform/bento_drop_box_service/workflows/Lint/badge.svg)
 [![codecov](https://codecov.io/gh/bento-platform/bento_drop_box_service/branch/master/graph/badge.svg)](https://codecov.io/gh/bento-platform/bento_drop_box_service)
 
-This is a small Quart application providing files for ingestion (through `bento_web`,
+This is a small FastAPI application providing files for ingestion (through `bento_web`,
 for `bento_wes`). By default, the file served are read on the existing filesystem, but
-these can also be read from a minIO instance (or AWS S3 for that matter).
+these can also be read from an S3-compatible backend.
 
-**Requires:** Python 3.10+ and Poetry 1.5+
+**Requires:** Python 3.12+ and Poetry 2.2+
 
 
 
