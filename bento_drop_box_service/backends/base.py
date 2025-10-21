@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from fastapi import HTTPException, Request, Response, status
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 from ..config import Config
 
@@ -9,16 +9,17 @@ from ..config import Config
 __all__ = ["DropBoxEntry", "DropBoxBackend"]
 
 
-# TODO: py3.11: individual optional fields
-class DropBoxEntry(TypedDict, total=False):
+class DropBoxEntry(TypedDict):
     name: str
     filePath: str
     relativePath: str
-    uri: str
-    size: int
-    lastModified: float
-    lastMetadataChange: float
-    contents: list["DropBoxEntry"]
+    # file entries:
+    uri: NotRequired[str]
+    size: NotRequired[int]
+    lastModified: NotRequired[float]
+    lastMetadataChange: NotRequired[float]
+    # directory entries:
+    contents: NotRequired[list["DropBoxEntry"]]
 
 
 class DropBoxBackend(ABC):
