@@ -132,9 +132,12 @@ class S3Backend(DropBoxBackend):
         return tuple(self.create_directory_tree(files_list))
 
     async def upload_to_path(self, request: Request, path: str, content_length: int) -> Response:
-        path = secure_filename(path)
+        path_parts = path.split("/")
+        # We need to be able to upload to "sub-folders" in S3, so we cannot censor slashes (which secure_filename does).
+        # So to create a "semi-secure" path while maintaining slashes, but filtering out double slashes or "."/"..".
+        semi_secured_path = "/".join(secure_filename(p) for p in path_parts if p and p not in ("..", "."))
         async with await self._create_s3_client() as s3_client:
-            await s3_client.put_object(Bucket=self.bucket_name, Key=path, Body=await request.body())
+            await s3_client.put_object(Bucket=self.bucket_name, Key=semi_secured_path, Body=await request.body())
 
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
