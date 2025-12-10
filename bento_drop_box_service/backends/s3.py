@@ -143,15 +143,20 @@ class S3Backend(DropBoxBackend):
             head = await s3.head_object(Bucket=self.bucket_name, Key=path)
 
         name = path.rsplit("/", 1)[-1]
-        g = head.get
 
-        return {
+        headers = {
             "Content-Disposition": f'attachment; filename="{name}"',
-            "Content-Length": str(g("ContentLength", 0)),
-            "Content-Type": g("ContentType") or "application/octet-stream",
-            "ETag": g("ETag", ""),
-            "Last-Modified": str(g("LastModified", "")),
+            "Content-Type": head.get("ContentType") or "application/octet-stream",
         }
+
+        if "ContentLength" in head:
+            headers["Content-Length"] = str(head["ContentLength"])
+        if "ETag" in head:
+            headers["ETag"] = head["ETag"]
+        if "LastModified" in head:
+            headers["Last-Modified"] = str(head["LastModified"])
+
+        return headers
 
     async def retrieve_from_path(self, path: str) -> Response:
         chunk_size = self.config.s3_chunk_size
