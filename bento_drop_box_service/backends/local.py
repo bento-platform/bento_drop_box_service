@@ -31,11 +31,10 @@ class LocalBackend(DropBoxBackend):
         entries: list[DropBoxEntry] = []
         sub_path_str: str = "/".join(sub_path)
         current_dir = (root_path / sub_path_str).absolute() if sub_path_str else root_path.absolute()
-        # noinspection PyUnresolvedReferences
+
         for entry_name in await aiofiles.os.listdir(current_dir):
             entry_path = current_dir / entry_name
             relative_path = (f"/{sub_path_str}" if sub_path_str else "") + f"/{entry_name}"
-            is_directory = await aiofiles.ospath.isdir(entry_path)
 
             if level > traversal_limit:
                 self.logger.warning(f"Exceeded traversal limit of {traversal_limit} generating directory tree")
@@ -48,6 +47,8 @@ class LocalBackend(DropBoxBackend):
             if "/" in entry_name:
                 self.logger.warning(f"Skipped entry with a '/' in its name: {entry_name}")
                 continue
+
+            is_directory = await aiofiles.ospath.isdir(entry_path)
 
             if not (is_directory or self.is_passing_filter(entry_name, include, ignore)):
                 # If neither of these conditions is true, we should skip this entry in the tree
@@ -84,7 +85,9 @@ class LocalBackend(DropBoxBackend):
 
             entries.append(entry)
 
-        return sorted(entries, key=lambda e: e["name"])
+        entries.sort(key=lambda e: e["name"])
+
+        return entries
 
     async def get_directory_tree(
         self,
