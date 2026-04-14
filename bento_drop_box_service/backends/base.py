@@ -1,25 +1,72 @@
+from __future__ import annotations
+
 import logging
+
 from abc import ABC, abstractmethod
 from fastapi import HTTPException, Request, Response, status
-from typing import NotRequired, TypedDict
+from os import stat_result
+from pydantic import BaseModel, RootModel
 
 from ..config import Config
 
 
-__all__ = ["DropBoxEntry", "DropBoxBackend"]
+__all__ = ["DropBoxEntryBase", "DropBoxEntryFile", "DropBoxEntryDirectory", "DropBoxEntry", "DropBoxBackend"]
 
 
-class DropBoxEntry(TypedDict):
+class DropBoxEntryBase(BaseModel):
     name: str
     filePath: str
     relativePath: str
-    # file entries:
-    uri: NotRequired[str]
-    size: NotRequired[int]
-    lastModified: NotRequired[float]
-    lastMetadataChange: NotRequired[float]
-    # directory entries:
-    contents: NotRequired[list["DropBoxEntry"]]
+
+    def to_file(self, uri: str, stat: stat_result) -> DropBoxEntry:
+        # noinspection PyArgumentList
+        return DropBoxEntry(
+            DropBoxEntryFile(
+                name=self.name,
+                filePath=self.filePath,
+                relativePath=self.relativePath,
+                uri=uri,
+                size=stat.st_size,
+                lastModified=stat.st_mtime,
+                lastMetadataChange=stat.st_ctime,
+            )
+        )
+
+    def to_directory(self, contents: list[DropBoxEntry]) -> DropBoxEntry:
+        # noinspection PyArgumentList
+        return DropBoxEntry(
+            DropBoxEntryDirectory(
+                name=self.name, filePath=self.filePath, relativePath=self.relativePath, contents=contents
+            )
+        )
+
+
+class DropBoxEntryFile(DropBoxEntryBase):
+    uri: str
+    size: int
+    lastModified: float
+    lastMetadataChange: float
+
+
+class DropBoxEntryDirectory(DropBoxEntryBase):
+    contents: list[DropBoxEntry]
+
+
+class DropBoxEntry(RootModel):
+    root: DropBoxEntryFile | DropBoxEntryDirectory
+
+
+# class DropBoxEntry(TypedDict):
+#     name: str
+#     filePath: str
+#     relativePath: str
+#     # file entries:
+#     uri: NotRequired[str]
+#     size: NotRequired[int]
+#     lastModified: NotRequired[float]
+#     lastMetadataChange: NotRequired[float]
+#     # directory entries:
+#     contents: NotRequired[list[DropBoxEntry]]
 
 
 class DropBoxBackend(ABC):
