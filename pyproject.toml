@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "bento_drop_box_service"
-version = "2.1.2"
+version = "2.1.3"
 description = "Drop box and basic file management service for the Bento platform."
 authors = ["David Lougheed <david.lougheed@mail.mcgill.ca>", "Simon Chénard <simon.chenard2@mcgill.ca>"]
 readme = "README.md"
@@ -19,11 +19,11 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.12.0"
-bento-lib = {extras = ["fastapi"], version = "^14.1.2"}
+bento-lib = {extras = ["fastapi"], version = "^15.0.0"}
 aiofiles = "^25.1.0"
-fastapi = {extras = ["all"], version = "^0.128.2"}
+fastapi = {extras = ["all"], version = "^0.135.3"}
 werkzeug = "^3.1.5"
-python-multipart = "^0.0.22"
+python-multipart = "^0.0.26"
 pydantic-settings = "^2.11.0"
 aioboto3 = "^15.1.0"
 orjson = "^3.11.7"
