@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse
 from starlette.responses import Response
 from werkzeug.utils import secure_filename
 
-from .base import DropBoxEntry, DropBoxBackend
+from .base import DropBoxEntryBase, DropBoxEntryFile, DropBoxEntryDirectory, DropBoxEntry, DropBoxBackend
 
 
 class LocalBackend(DropBoxBackend):
@@ -55,37 +55,38 @@ class LocalBackend(DropBoxBackend):
                 continue
 
             # info for all entries
-            entry: DropBoxEntry = {
-                "name": entry_name,
-                "filePath": str(entry_path),  # Actual path on file system
-                "relativePath": relative_path,  # Path relative to root of drop box (/)
-            }
+            entry_base: DropBoxEntryBase = DropBoxEntryBase(
+                name=entry_name,
+                filePath=str(entry_path),  # Actual path on file system
+                relativePath=relative_path,  # Path relative to root of drop box (/)
+            )
+
+            entry: DropBoxEntry
 
             # recurse if directory
             if is_directory:
-                entry["contents"] = await self._get_directory_tree(
+                contents = await self._get_directory_tree(
                     root_path, (*sub_path, entry_name), level=level + 1, ignore=ignore, include=include
                 )
 
                 # if using ignore or include, skip empty directories
-                if not entry["contents"] and bool(ignore or include):
+                if not contents and bool(ignore or include):
                     continue
+
+                entry = entry_base.to_directory(
+                    await self._get_directory_tree(
+                        root_path, (*sub_path, entry_name), level=level + 1, ignore=ignore, include=include
+                    )
+                )
 
             # else file entry
             else:
-                entry_path_stat = await aiofiles.os.stat(entry_path)
-                entry.update(
-                    {
-                        "size": entry_path_stat.st_size,
-                        "lastModified": entry_path_stat.st_mtime,
-                        "lastMetadataChange": entry_path_stat.st_ctime,
-                        "uri": self.config.service_url_base_path + f"/objects{relative_path}",
-                    }
-                )
+                stat = await aiofiles.os.stat(entry_path)
+                entry = entry_base.to_file(self.config.service_url_base_path + f"/objects{relative_path}", stat)
 
             entries.append(entry)
 
-        entries.sort(key=lambda e: e["name"])
+        entries.sort(key=lambda e: e.root.name)
 
         return entries
 
@@ -135,7 +136,7 @@ class LocalBackend(DropBoxBackend):
 
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-    async def get_node_at_path(self, path: str, verb: str = "retrieve") -> DropBoxEntry:
+    async def get_node_at_path(self, path: str, verb: str = "retrieve") -> DropBoxEntryFile:
         root_path: pathlib.Path = pathlib.Path(self.config.service_data).absolute()
         directory_items: tuple[DropBoxEntry, ...] = await self.get_directory_tree()
 
@@ -148,26 +149,26 @@ class LocalBackend(DropBoxBackend):
             part = path_parts[0]
             path_parts = path_parts[1:]
 
-            if part not in {item["name"] for item in directory_items}:
+            if part not in {item.root.name for item in directory_items}:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nothing found at specified path")
 
             try:
-                node = next(item for item in directory_items if item["name"] == part)
+                node = next(item.root for item in directory_items if item.root.name == part)
 
                 if not path_parts:  # End of the path
-                    if "contents" in node:
+                    if isinstance(node, DropBoxEntryDirectory):
                         raise HTTPException(
                             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot {verb} a directory"
                         )
 
                     return node
 
-                if "contents" not in node:
+                if not isinstance(node, DropBoxEntryDirectory):
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST, detail=f"{node['name']} is not a directory"
+                        status_code=status.HTTP_400_BAD_REQUEST, detail=f"{node.name} is not a directory"
                     )
 
-                directory_items = tuple(node["contents"])
+                directory_items = tuple(node.contents)
                 # Go around another iteration, nesting into this directory
 
             except StopIteration:
@@ -175,9 +176,9 @@ class LocalBackend(DropBoxBackend):
 
     async def retrieve_from_path(self, path: str) -> Response:
         node = await self.get_node_at_path(path)
-        return FileResponse(node["filePath"], media_type="application/octet-stream", filename=node["name"])
+        return FileResponse(node.filePath, media_type="application/octet-stream", filename=node.name)
 
     async def delete_at_path(self, path: str) -> Response:
         node = await self.get_node_at_path(path, verb="delete")
-        await aiofiles.os.remove(node["filePath"])
+        await aiofiles.os.remove(node.filePath)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
