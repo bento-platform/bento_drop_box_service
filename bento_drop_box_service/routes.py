@@ -2,11 +2,11 @@ from bento_lib.auth.permissions import P_VIEW_DROP_BOX, P_INGEST_DROP_BOX, P_DEL
 from bento_lib.auth.resources import RESOURCE_EVERYTHING
 from fastapi import APIRouter, Form, Query, Request, status
 from fastapi.exceptions import HTTPException
-from fastapi.responses import ORJSONResponse
-from starlette.responses import Response
+from pydantic import RootModel
 from typing import Annotated
 
 from .authz import authz_middleware
+from .backends.base import DropBoxEntry
 from .backends.dependency import BackendDependency
 
 
@@ -19,6 +19,10 @@ authz_ingest_dependency = authz_middleware.dep_require_permissions_on_resource(f
 authz_delete_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({P_DELETE_DROP_BOX}))
 
 
+class DropBoxEntriesResponse(RootModel):
+    root: tuple[DropBoxEntry, ...]
+
+
 @drop_box_router.get("/tree", dependencies=(authz_view_dependency,))
 async def drop_box_tree(
     backend: BackendDependency,
@@ -28,8 +32,8 @@ async def drop_box_tree(
     ignore: Annotated[
         list[str] | None, Query(description="Filter Query Parameter (Optional): File extensions to exclude from tree")
     ] = None,
-) -> Response:
-    return ORJSONResponse(await backend.get_directory_tree(include=include, ignore=ignore))
+) -> DropBoxEntriesResponse:
+    return DropBoxEntriesResponse(root=await backend.get_directory_tree(include=include, ignore=ignore))
 
 
 @drop_box_router.get("/tree/{path:path}", dependencies=(authz_view_dependency,))
@@ -42,11 +46,10 @@ async def drop_box_subtree(
     ignore: Annotated[
         list[str] | None, Query(description="Filter Query Parameter (Optional): File extensions to exclude from tree")
     ] = None,
-) -> Response:
-    # Same as /tree endpoint, but accepts a subpath in order to return a directory sub-tree.
+) -> DropBoxEntriesResponse:
+    # Same as /tree endpoint, but accepts a subpath in order to return a directory subtree.
     # Useful to download files for WES workflows that take a directory input.
-    tree = await backend.get_directory_tree(sub_path=path, include=include, ignore=ignore)
-    return ORJSONResponse(tree)
+    return DropBoxEntriesResponse(root=await backend.get_directory_tree(sub_path=path, include=include, ignore=ignore))
 
 
 @drop_box_router.get("/objects/{path:path}", dependencies=(authz_view_dependency,))

@@ -7,7 +7,7 @@ from starlette.responses import Response, StreamingResponse
 from werkzeug.utils import secure_filename
 from bento_lib.logging import log_level_from_str
 
-from .base import DropBoxEntry, DropBoxBackend
+from .base import DropBoxEntryFile, DropBoxEntryDirectory, DropBoxEntry, DropBoxBackend
 from ..config import Config
 
 
@@ -38,7 +38,7 @@ class S3Backend(DropBoxBackend):
         return self.session.client("s3", **self.s3_kwargs)
 
     @staticmethod
-    def create_directory_tree(files: list[DropBoxEntry]):
+    def create_directory_tree(files: list[DropBoxEntryFile]):
         """
         Function to create the directory tree from a list of files
         For each file present in the list :
@@ -50,38 +50,30 @@ class S3Backend(DropBoxBackend):
         tree: list[DropBoxEntry] = []
 
         for file in files:
-            directories = file["filePath"].split("/")
-            current_level = tree
+            directories = file.filePath.split("/")
+            current_level: list[DropBoxEntry] = tree
             for i, directory_name in enumerate(directories[:-1]):
                 exist_in_tree: bool = False
 
                 for tree_node in current_level:
-                    if tree_node["name"] == directory_name:
-                        current_level = tree_node["contents"]
+                    if tree_node.root.name == directory_name:
+                        current_level = getattr(tree_node.root, "contents", [])
                         exist_in_tree = True
                         break
 
                 if not exist_in_tree:
                     # If the directory is not in the tree, create it
                     directory_path = "/".join(directories[: i + 1])
-                    new_tree_node = DropBoxEntry(
+                    new_tree_node = DropBoxEntryDirectory(
                         name=directory_name, filePath=directory_path, relativePath=directory_path, contents=[]
                     )
-                    current_level.append(new_tree_node)
-                    current_level = new_tree_node["contents"]
+                    # noinspection PyArgumentList
+                    current_level.append(DropBoxEntry(new_tree_node))
+                    current_level = new_tree_node.contents
 
             # Add file to the tree, at the right place (current level)
-            current_level.append(
-                DropBoxEntry(
-                    name=file["name"],
-                    filePath=file["filePath"],
-                    relativePath="/" + file["relativePath"],
-                    size=file.get("size"),
-                    lastModified=file["lastModified"],
-                    lastMetadataChange=file["lastMetadataChange"],
-                    uri=file["uri"],
-                )
-            )
+            # noinspection PyArgumentList
+            current_level.append(DropBoxEntry(file))
 
         return tree
 
@@ -96,7 +88,7 @@ class S3Backend(DropBoxBackend):
         prefix = sub_path if sub_path else ""
         traversal_limit = self.config.traversal_limit
 
-        files_list: list[DropBoxEntry] = []
+        files_list: list[DropBoxEntryFile] = []
         async with await self._create_s3_client() as s3_client:
             paginator = s3_client.get_paginator("list_objects_v2")
             page_iterator = paginator.paginate(Bucket=self.bucket_name, Prefix=prefix)
@@ -118,15 +110,15 @@ class S3Backend(DropBoxBackend):
                         continue
 
                     last_modified = obj["LastModified"].timestamp()
-                    entry: DropBoxEntry = {
-                        "name": key.split("/")[-1],
-                        "filePath": key,
-                        "relativePath": key,
-                        "size": obj["Size"],
-                        "lastModified": last_modified,
-                        "lastMetadataChange": last_modified,
-                        "uri": f"{self.config.service_url_base_path}/objects/{key}",
-                    }
+                    entry: DropBoxEntryFile = DropBoxEntryFile(
+                        name=key.split("/")[-1],
+                        filePath=key,
+                        relativePath="/" + key,
+                        size=obj["Size"],
+                        lastModified=last_modified,
+                        lastMetadataChange=last_modified,
+                        uri=f"{self.config.service_url_base_path}/objects/{key}",
+                    )
                     files_list.append(entry)
 
         return tuple(self.create_directory_tree(files_list))
