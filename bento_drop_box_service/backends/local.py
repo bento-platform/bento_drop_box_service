@@ -1,9 +1,9 @@
-import aiofiles
-import aiofiles.os
-import aiofiles.ospath
 import os
 import pathlib
 
+import aiofiles
+import aiofiles.os
+import aiofiles.ospath
 from fastapi import status
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse
 from starlette.responses import Response
 from werkzeug.utils import secure_filename
 
-from .base import DropBoxEntry, DropBoxBackend
+from .base import DropBoxBackend, DropBoxEntry
 
 
 class LocalBackend(DropBoxBackend):

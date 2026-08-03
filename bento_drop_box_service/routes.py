@@ -1,14 +1,14 @@
-from bento_lib.auth.permissions import P_VIEW_DROP_BOX, P_INGEST_DROP_BOX, P_DELETE_DROP_BOX
+from typing import Annotated
+
+from bento_lib.auth.permissions import P_DELETE_DROP_BOX, P_INGEST_DROP_BOX, P_VIEW_DROP_BOX
 from bento_lib.auth.resources import RESOURCE_EVERYTHING
 from fastapi import APIRouter, Form, Query, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import ORJSONResponse
 from starlette.responses import Response
-from typing import Annotated
 
 from .authz import authz_middleware
 from .backends.dependency import BackendDependency
-
 
 drop_box_router = APIRouter()
 

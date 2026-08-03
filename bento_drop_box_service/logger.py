@@ -1,9 +1,9 @@
 import logging
+from functools import lru_cache
+from typing import Annotated
 
 from bento_lib.logging import log_level_from_str
 from fastapi import Depends
-from functools import lru_cache
-from typing import Annotated
 
 from .config import ConfigDependency
 

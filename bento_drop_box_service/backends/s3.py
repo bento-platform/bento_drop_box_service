@@ -1,14 +1,14 @@
-import aioboto3
 import logging
 
+import aioboto3
+from bento_lib.logging import log_level_from_str
 from fastapi import status
 from fastapi.requests import Request
 from starlette.responses import Response, StreamingResponse
 from werkzeug.utils import secure_filename
-from bento_lib.logging import log_level_from_str
 
-from .base import DropBoxEntry, DropBoxBackend
 from ..config import Config
+from .base import DropBoxBackend, DropBoxEntry
 
 
 class S3Backend(DropBoxBackend):
