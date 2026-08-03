@@ -36,7 +36,10 @@ pytest-cov = "^7.0.0"
 pytest-asyncio = "^1.2.0"
 debugpy = "^1.8.20"
 httpx2 = "^2.3.0"
-ruff = "^0.15.0"
+ruff = "^0.16.0"
 
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.lint]
+ignore = ["PYI041", "RUF022"]

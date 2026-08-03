@@ -1,10 +1,10 @@
 import logging
 from abc import ABC, abstractmethod
-from fastapi import HTTPException, Request, Response, status
 from typing import NotRequired, TypedDict
 
-from ..config import Config
+from fastapi import HTTPException, Request, Response, status
 
+from ..config import Config
 
 __all__ = ["DropBoxEntry", "DropBoxBackend"]
 
@@ -59,9 +59,9 @@ class DropBoxBackend(ABC):
     @staticmethod
     def is_passing_filter(entry: str, included_extensions: list[str] | None, ignored_extensions: list[str] | None):
         if included_extensions:
-            return any([entry.endswith(ext) for ext in included_extensions])
+            return any(entry.endswith(ext) for ext in included_extensions)
         elif ignored_extensions:
-            return not any([entry.endswith(ext) for ext in ignored_extensions])
+            return not any(entry.endswith(ext) for ext in ignored_extensions)
         else:
             return True
 
