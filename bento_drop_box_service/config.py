@@ -1,8 +1,9 @@
+from functools import lru_cache
+from typing import Annotated, Literal
+
 from bento_lib.config.pydantic import BentoFastAPIBaseConfig
 from fastapi import Depends
-from functools import lru_cache
 from pydantic import Field
-from typing import Annotated, Literal
 
 from .constants import SERVICE_TYPE
 
@@ -33,7 +34,7 @@ class Config(BentoFastAPIBaseConfig):
     use_s3_backend: bool = Field(default_factory=lambda c: c["s3_endpoint"] != "")
 
 
-@lru_cache()
+@lru_cache
 def get_config() -> Config:
     return Config()
 

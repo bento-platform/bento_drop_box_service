@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import logging
-
 from abc import ABC, abstractmethod
-from fastapi import HTTPException, Request, Response, status
 from os import stat_result
+
+from fastapi import HTTPException, Request, Response, status
 from pydantic import BaseModel, RootModel
 
 from ..config import Config
-
 
 __all__ = ["DropBoxEntryBase", "DropBoxEntryFile", "DropBoxEntryDirectory", "DropBoxEntry", "DropBoxBackend"]
 
@@ -106,9 +105,9 @@ class DropBoxBackend(ABC):
     @staticmethod
     def is_passing_filter(entry: str, included_extensions: list[str] | None, ignored_extensions: list[str] | None):
         if included_extensions:
-            return any([entry.endswith(ext) for ext in included_extensions])
+            return any(entry.endswith(ext) for ext in included_extensions)
         elif ignored_extensions:
-            return not any([entry.endswith(ext) for ext in ignored_extensions])
+            return not any(entry.endswith(ext) for ext in ignored_extensions)
         else:
             return True
 

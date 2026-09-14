@@ -1,12 +1,11 @@
 import os
 import pathlib
-import pytest
-
-from fastapi.testclient import TestClient
 from functools import lru_cache
 
-from bento_drop_box_service.config import Config, get_config
+import pytest
+from fastapi.testclient import TestClient
 
+from bento_drop_box_service.config import Config, get_config
 
 local_dir = str(pathlib.Path(__file__).parent / "test_data")
 bucket_name = "test"
