@@ -18,7 +18,6 @@ class DropBoxEntryBase(BaseModel):
     relativePath: str
 
     def to_file(self, uri: str, stat: stat_result) -> DropBoxEntry:
-        # noinspection PyArgumentList
         return DropBoxEntry(
             DropBoxEntryFile(
                 name=self.name,
@@ -32,7 +31,6 @@ class DropBoxEntryBase(BaseModel):
         )
 
     def to_directory(self, contents: list[DropBoxEntry]) -> DropBoxEntry:
-        # noinspection PyArgumentList
         return DropBoxEntry(
             DropBoxEntryDirectory(
                 name=self.name, filePath=self.filePath, relativePath=self.relativePath, contents=contents

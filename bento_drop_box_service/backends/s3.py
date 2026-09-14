@@ -67,12 +67,10 @@ class S3Backend(DropBoxBackend):
                     new_tree_node = DropBoxEntryDirectory(
                         name=directory_name, filePath=directory_path, relativePath=directory_path, contents=[]
                     )
-                    # noinspection PyArgumentList
                     current_level.append(DropBoxEntry(new_tree_node))
                     current_level = new_tree_node.contents
 
             # Add file to the tree, at the right place (current level)
-            # noinspection PyArgumentList
             current_level.append(DropBoxEntry(file))
 
         return tree
