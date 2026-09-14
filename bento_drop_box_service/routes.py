@@ -92,4 +92,4 @@ async def drop_box_upload(request: Request, path: str, backend: BackendDependenc
     dependencies=(authz_delete_dependency,),
 )
 async def drop_box_delete(path: str, backend: BackendDependency):
-    return await backend.delete_at_path(path)
+    await backend.delete_at_path(path)

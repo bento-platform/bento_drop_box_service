@@ -165,7 +165,6 @@ class S3Backend(DropBoxBackend):
 
         return StreamingResponse(content=stream_object(), headers=headers)
 
-    async def delete_at_path(self, path: str) -> Response:
+    async def delete_at_path(self, path: str):
         async with await self._create_s3_client() as s3_client:
             await s3_client.delete_object(Bucket=self.bucket_name, Key=path)
-        return Response(status_code=status.HTTP_204_NO_CONTENT)

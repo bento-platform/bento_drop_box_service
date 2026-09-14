@@ -178,7 +178,6 @@ class LocalBackend(DropBoxBackend):
         node = await self.get_node_at_path(path)
         return FileResponse(node.filePath, media_type="application/octet-stream", filename=node.name)
 
-    async def delete_at_path(self, path: str) -> Response:
+    async def delete_at_path(self, path: str):
         node = await self.get_node_at_path(path, verb="delete")
         await aiofiles.os.remove(node.filePath)
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
