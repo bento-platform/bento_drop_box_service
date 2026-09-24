@@ -1,6 +1,7 @@
 import logging
 
 import aioboto3
+from aiobotocore.config import AioConfig
 from bento_lib.logging import log_level_from_str
 from fastapi import status
 from fastapi.requests import Request
@@ -21,16 +22,10 @@ class S3Backend(DropBoxBackend):
         logging.getLogger("botocore").setLevel(log_level)
         logging.getLogger("aiobotocore").setLevel(log_level)
 
-        protocol = "https" if config.s3_use_https else "http"
-        endpoint_url = f"{protocol}://{config.s3_endpoint}"
-
+        # Credentials, profile, region and endpoint are resolved by botocore from standard AWS env vars/config files.
         self.session = aioboto3.Session()
         self.s3_kwargs = {
-            "endpoint_url": endpoint_url,
-            "aws_access_key_id": config.s3_access_key,
-            "aws_secret_access_key": config.s3_secret_key,
-            "region_name": config.s3_region_name,
-            "verify": config.s3_validate_ssl,
+            "verify": config.s3_validate_ssl
         }
         self.bucket_name = config.s3_bucket
 
