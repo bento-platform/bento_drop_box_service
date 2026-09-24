@@ -1,7 +1,6 @@
 import logging
 
 import aioboto3
-from aiobotocore.config import AioConfig
 from bento_lib.logging import log_level_from_str
 from fastapi import status
 from fastapi.requests import Request
@@ -24,9 +23,7 @@ class S3Backend(DropBoxBackend):
 
         # Credentials, profile, region and endpoint are resolved by botocore from standard AWS env vars/config files.
         self.session = aioboto3.Session()
-        self.s3_kwargs = {
-            "verify": config.s3_validate_ssl
-        }
+        self.s3_kwargs = {"verify": config.s3_validate_ssl}
         self.bucket_name = config.s3_bucket
 
     async def _create_s3_client(self):
