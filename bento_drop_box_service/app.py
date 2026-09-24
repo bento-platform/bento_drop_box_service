@@ -29,4 +29,4 @@ application.include_router(drop_box_router)
 logger.info(f"Using {'S3' if config_for_setup.use_s3_backend else 'local'} storage backend")
 
 if config_for_setup.use_s3_backend:
-    logger.info(f"S3 endpoint: {config_for_setup.s3_endpoint}")
+    logger.info(f"S3 bucket: {config_for_setup.s3_bucket}")
