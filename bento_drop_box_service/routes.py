@@ -4,11 +4,10 @@ from bento_lib.auth.permissions import P_DELETE_DROP_BOX, P_INGEST_DROP_BOX, P_V
 from bento_lib.auth.resources import RESOURCE_EVERYTHING
 from fastapi import APIRouter, Form, Query, Request, status
 from fastapi.exceptions import HTTPException
-from pydantic import RootModel
 
 from .authz import authz_middleware
-from .backends.base import DropBoxEntry
 from .backends.dependency import BackendDependency
+from .models import DropBoxEntriesResponse
 
 drop_box_router = APIRouter()
 
@@ -17,10 +16,6 @@ VIEW_PERMISSION_SET = frozenset({P_VIEW_DROP_BOX})
 authz_view_dependency = authz_middleware.dep_require_permissions_on_resource(VIEW_PERMISSION_SET)
 authz_ingest_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({P_INGEST_DROP_BOX}))
 authz_delete_dependency = authz_middleware.dep_require_permissions_on_resource(frozenset({P_DELETE_DROP_BOX}))
-
-
-class DropBoxEntriesResponse(RootModel):
-    root: tuple[DropBoxEntry, ...]
 
 
 @drop_box_router.get("/tree", dependencies=(authz_view_dependency,))

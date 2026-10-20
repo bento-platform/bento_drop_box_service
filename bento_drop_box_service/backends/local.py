@@ -11,7 +11,8 @@ from fastapi.responses import FileResponse
 from starlette.responses import Response
 from werkzeug.utils import secure_filename
 
-from .base import DropBoxBackend, DropBoxEntry, DropBoxEntryBase, DropBoxEntryDirectory, DropBoxEntryFile
+from ..models import DropBoxEntry, DropBoxEntryBase, DropBoxEntryDirectory, DropBoxEntryFile
+from .base import DropBoxBackend
 
 
 class LocalBackend(DropBoxBackend):

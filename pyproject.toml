@@ -25,7 +25,7 @@ fastapi = {extras = ["all"], version = "^0.141.1"}
 werkzeug = "^3.1.5"
 python-multipart = "^0.0.32"
 pydantic-settings = "^2.11.0"
-aioboto3 = "^15.1.0"
+aiobotocore = "^3.9.2"
 orjson = "^3.11.7"
 
 [tool.poetry.group.dev.dependencies]
@@ -37,6 +37,7 @@ pytest-asyncio = "^1.2.0"
 debugpy = "^1.8.20"
 httpx2 = "^2.3.0"
 ruff = "^0.16.0"
+moto = {version = "^5.2.4", extras = ["s3", "server"]}
 
 [tool.ruff]
 line-length = 120
