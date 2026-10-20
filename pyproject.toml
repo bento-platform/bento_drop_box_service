@@ -37,6 +37,7 @@ pytest-asyncio = "^1.2.0"
 debugpy = "^1.8.20"
 httpx2 = "^2.3.0"
 ruff = "^0.16.0"
+moto = {version = "^5.2.4", extras = ["s3", "server"]}
 
 [tool.ruff]
 line-length = 120

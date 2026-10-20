@@ -8,7 +8,8 @@ from starlette.responses import Response, StreamingResponse
 from werkzeug.utils import secure_filename
 
 from ..config import Config
-from .base import DropBoxBackend, DropBoxEntry, DropBoxEntryDirectory, DropBoxEntryFile
+from ..models import DropBoxEntry, DropBoxEntryDirectory, DropBoxEntryFile
+from .base import DropBoxBackend
 
 
 class S3Backend(DropBoxBackend):
