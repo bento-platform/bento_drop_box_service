@@ -76,3 +76,13 @@ ASGI application.
 
 It is best to then put an HTTP server software such as NGINX in front of 
 Hypercorn. 
+
+## S3 storage
+
+The S3 backend is enabled by setting `S3_BUCKET`. All other S3 client settings (credentials, region, endpoint,
+CA bundle) are resolved by botocore from the 
+[standard AWS environment variables](https://docs.aws.amazon.com/sdkref/latest/guide/environment-variables.html) 
+(e.g. `AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`) or from shared 
+config/credentials files selected with `AWS_PROFILE`.
+
+`S3_VALIDATE_SSL=false` disables TLS verification (dev only, prefer `AWS_CA_BUNDLE` for self-signed certificates).
