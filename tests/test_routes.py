@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from bento_drop_box_service.backends.base import DropBoxEntry
+from bento_drop_box_service.models import DropBoxEntry
 
 
 def validate_tree(tree: list[DropBoxEntry]):

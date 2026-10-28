@@ -1,6 +1,6 @@
 import logging
 
-import aioboto3
+from aiobotocore.session import get_session
 from bento_lib.logging import log_level_from_str
 from fastapi import status
 from fastapi.requests import Request
@@ -8,7 +8,8 @@ from starlette.responses import Response, StreamingResponse
 from werkzeug.utils import secure_filename
 
 from ..config import Config
-from .base import DropBoxBackend, DropBoxEntry, DropBoxEntryDirectory, DropBoxEntryFile
+from ..models import DropBoxEntry, DropBoxEntryDirectory, DropBoxEntryFile
+from .base import DropBoxBackend
 
 
 class S3Backend(DropBoxBackend):
@@ -17,25 +18,16 @@ class S3Backend(DropBoxBackend):
 
         # Sync log levels for boto-related loggers with configured log level:
         log_level = log_level_from_str(config.log_level)
-        logging.getLogger("boto3").setLevel(log_level)
         logging.getLogger("botocore").setLevel(log_level)
         logging.getLogger("aiobotocore").setLevel(log_level)
 
-        protocol = "https" if config.s3_use_https else "http"
-        endpoint_url = f"{protocol}://{config.s3_endpoint}"
-
-        self.session = aioboto3.Session()
-        self.s3_kwargs = {
-            "endpoint_url": endpoint_url,
-            "aws_access_key_id": config.s3_access_key,
-            "aws_secret_access_key": config.s3_secret_key,
-            "region_name": config.s3_region_name,
-            "verify": config.s3_validate_ssl,
-        }
+        # Credentials, profile, region and endpoint are resolved by botocore from standard AWS env vars/config files.
+        self.session = get_session()
+        self.s3_kwargs = {"verify": config.s3_validate_ssl}
         self.bucket_name = config.s3_bucket
 
-    async def _create_s3_client(self):
-        return self.session.client("s3", **self.s3_kwargs)
+    def _create_s3_client(self):
+        return self.session.create_client("s3", **self.s3_kwargs)
 
     @staticmethod
     def create_directory_tree(files: list[DropBoxEntryFile]):
@@ -87,7 +79,7 @@ class S3Backend(DropBoxBackend):
         traversal_limit = self.config.traversal_limit
 
         files_list: list[DropBoxEntryFile] = []
-        async with await self._create_s3_client() as s3_client:
+        async with self._create_s3_client() as s3_client:
             paginator = s3_client.get_paginator("list_objects_v2")
             page_iterator = paginator.paginate(Bucket=self.bucket_name, Prefix=prefix)
 
@@ -126,13 +118,13 @@ class S3Backend(DropBoxBackend):
         # We need to be able to upload to "sub-folders" in S3, so we cannot censor slashes (which secure_filename does).
         # So to create a "semi-secure" path while maintaining slashes, but filtering out double slashes or "."/"..".
         semi_secured_path = "/".join(secure_filename(p) for p in path_parts if p and p not in ("..", "."))
-        async with await self._create_s3_client() as s3_client:
+        async with self._create_s3_client() as s3_client:
             await s3_client.put_object(Bucket=self.bucket_name, Key=semi_secured_path, Body=await request.body())
 
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     async def _retrive_headers(self, path: str) -> dict[str, str]:
-        async with await self._create_s3_client() as s3:
+        async with self._create_s3_client() as s3:
             head = await s3.head_object(Bucket=self.bucket_name, Key=path)
 
         name = path.rsplit("/", 1)[-1]
@@ -156,7 +148,7 @@ class S3Backend(DropBoxBackend):
         headers = await self._retrive_headers(path)
 
         async def stream_object():
-            async with await self._create_s3_client() as s3:
+            async with self._create_s3_client() as s3:
                 obj = await s3.get_object(Bucket=self.bucket_name, Key=path)
                 self.logger.debug(f"Streaming {path}")
                 stream = obj["Body"]
@@ -166,5 +158,5 @@ class S3Backend(DropBoxBackend):
         return StreamingResponse(content=stream_object(), headers=headers)
 
     async def delete_at_path(self, path: str):
-        async with await self._create_s3_client() as s3_client:
+        async with self._create_s3_client() as s3_client:
             await s3_client.delete_object(Bucket=self.bucket_name, Key=path)

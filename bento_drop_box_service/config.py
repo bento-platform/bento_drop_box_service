@@ -23,15 +23,13 @@ class Config(BentoFastAPIBaseConfig):
     service_data_source: Literal["local"] = "local"
     traversal_limit: int = 16
 
-    s3_access_key: str = ""
-    s3_secret_key: str = ""
-    s3_endpoint: str = ""
+    # S3 credentials, region and endpoint are resolved by botocore from the standard AWS environment variables
+    # (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION,AWS_ENDPOINT_URL_S3, AWS_CA_BUNDLE, ...) or AWS_PROFILE.
     s3_bucket: str = ""
-    s3_region_name: str = ""
-    s3_validate_ssl: bool = False
-    s3_use_https: bool = True
+    # False disables TLS verification (dev only); prefer AWS_CA_BUNDLE for self-signed certs
+    s3_validate_ssl: bool = True
     s3_chunk_size: int = 64 * 1024
-    use_s3_backend: bool = Field(default_factory=lambda c: c["s3_endpoint"] != "")
+    use_s3_backend: bool = Field(default_factory=lambda c: c["s3_bucket"] != "")
 
 
 @lru_cache
